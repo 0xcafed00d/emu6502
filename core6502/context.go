@@ -21,6 +21,28 @@ type CPUContext interface {
 	PokeWord(addr uint16, val uint16)
 }
 
+// performs hard reset, resets all ram & registers
+// attempts to write new reset vector
+// resets stack pointer, and reloads PC from reset vector
+func HardResetCPU(ctx CPUContext, resetVector uint16) {
+	for n := 0; n < 0x10000; n++ {
+		ctx.Poke(uint16(n), 0)
+	}
+	ctx.SetFlags(0)
+	ctx.SetRegA(0)
+	ctx.SetRegX(0)
+	ctx.SetRegY(0)
+	ctx.SetRegSP(0xff)
+	ctx.PokeWord(Vector_RST, resetVector)
+	ctx.SetRegPC(ctx.PeekWord(Vector_RST))
+}
+
+// performs soft reset. resets stack pointer, and reloads PC from reset vector
+func SoftResetCPU(ctx CPUContext) {
+	ctx.SetRegSP(0xff)
+	ctx.SetRegPC(ctx.PeekWord(Vector_RST))
+}
+
 // CPU context. Conains CPU registers and 64K Ram
 type BasicCPUContext struct {
 	reg struct {
