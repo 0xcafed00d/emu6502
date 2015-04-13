@@ -13,8 +13,12 @@ type TextInputField struct {
 }
 
 func (t *TextInputField) HandleInput(k termbox.Key, r rune) {
-	if r >= ' ' {
+	if r > ' ' {
 		t.inp = append(t.inp, r)
+	}
+
+	if k == 32 {
+		t.inp = append(t.inp, ' ')
 	}
 
 	if len(t.inp) > 0 && (k == termbox.KeyBackspace || k == termbox.KeyBackspace2) {
