@@ -1,37 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"github.com/nsf/termbox-go"
 	"github.com/simulatedsimian/emu6502/core6502"
 )
-
-type TextInputField struct {
-	x, y      int
-	inp       []rune
-	cursorLoc int
-}
-
-func (t *TextInputField) HandleInput(k termbox.Key, r rune) {
-	if r > ' ' {
-		t.inp = append(t.inp, r)
-	}
-
-	if k == 32 {
-		t.inp = append(t.inp, ' ')
-	}
-
-	if len(t.inp) > 0 && (k == termbox.KeyBackspace || k == termbox.KeyBackspace2) {
-		t.inp = t.inp[:len(t.inp)-1]
-	}
-
-	printAtDef(t.x, t.y+1, fmt.Sprintf("%v, %v               ", k, r))
-
-}
-
-func (t *TextInputField) Draw() {
-	printAtDef(t.x, t.y, string(t.inp)+" ")
-}
 
 func main() {
 	err := termbox.Init()
