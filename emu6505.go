@@ -12,38 +12,46 @@ func main() {
 	}
 	defer termbox.Close()
 
-	termbox.HideCursor()
-
 	var ctx core6502.BasicCPUContext
 	core6502.HardResetCPU(&ctx, 0x400)
-	var addr uint16
 
-	textInput := TextInputField{0, 10, nil, 0}
+	doQuit := false
 
-	//	termx, termy := termbox.Size()
+	dl := DisplayList{}
 
-	for {
-		switch ev := termbox.PollEvent(); ev.Type {
+	cmdInput := MakeTextInputField(10, 18, func(inp string) {
+		if inp == "q" {
+			doQuit = true
+		}
+	})
+	regDisp := RegisterDisplay{1, 1, &ctx}
+	memDisp := MemoryDisplay{30, 1, 0, &ctx}
+	stkDisp := StackDisplay{24, 1, &ctx}
 
-		case termbox.EventKey:
-			switch ev.Key {
-			case termbox.KeyEsc:
-				return
-			case termbox.KeyPgdn:
-				addr += 32
-			case termbox.KeyPgup:
-				addr -= 32
-			}
+	dl.AddElement(cmdInput)
+	dl.AddElement(&regDisp)
+	dl.AddElement(&memDisp)
+	dl.AddElement(&stkDisp)
+	dl.AddElement(&StaticText{1, 18, "Command:"})
+	dl.AddElement(&StaticText{1, 0, "Registers:"})
+	dl.AddElement(&StaticText{30, 0, "Memory:"})
+	dl.AddElement(&StaticText{24, 0, "TOS:"})
 
-			printRegisters(1, 1, &ctx)
-			printMemory(25, 1, addr, &ctx)
-			textInput.HandleInput(ev.Key, ev.Ch)
-			textInput.Draw()
+	cmdInput.GiveFocus()
 
+	dl.Draw()
+	termbox.Flush()
+
+	for !doQuit {
+		ev := termbox.PollEvent()
+
+		if ev.Type == termbox.EventKey {
+			dl.HandleInput(ev.Key, ev.Ch)
+			dl.Draw()
 			termbox.Flush()
+		}
 
-		case termbox.EventResize:
-			//			termx, termy = ev.Width, ev.Height
+		if ev.Type == termbox.EventResize {
 			termbox.Flush()
 		}
 	}
