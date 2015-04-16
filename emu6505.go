@@ -19,19 +19,24 @@ func main() {
 
 	dl := DisplayList{}
 
+	regDisp := RegisterDisplay{1, 1, &ctx}
+	memDisp := MemoryDisplay{30, 1, 0, &ctx}
+	stkDisp := StackDisplay{24, 1, &ctx}
+	logDisp := ScrollingTextOutput{1, 20, 80, 5, nil}
+
 	cmdInput := MakeTextInputField(10, 18, func(inp string) {
 		if inp == "q" {
 			doQuit = true
 		}
+
+		logDisp.WriteLine(inp)
 	})
-	regDisp := RegisterDisplay{1, 1, &ctx}
-	memDisp := MemoryDisplay{30, 1, 0, &ctx}
-	stkDisp := StackDisplay{24, 1, &ctx}
 
 	dl.AddElement(cmdInput)
 	dl.AddElement(&regDisp)
 	dl.AddElement(&memDisp)
 	dl.AddElement(&stkDisp)
+	dl.AddElement(&logDisp)
 	dl.AddElement(&StaticText{1, 18, "Command:"})
 	dl.AddElement(&StaticText{1, 0, "Registers:"})
 	dl.AddElement(&StaticText{30, 0, "Memory:"})

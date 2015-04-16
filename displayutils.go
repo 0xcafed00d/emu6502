@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/nsf/termbox-go"
+	"github.com/simulatedsimian/go_sandbox/geom"
 )
 
 func printAt(x, y int, s string, fg, bg termbox.Attribute) {
@@ -14,6 +15,24 @@ func printAt(x, y int, s string, fg, bg termbox.Attribute) {
 
 func printAtDef(x, y int, s string) {
 	printAt(x, y, s, termbox.ColorDefault, termbox.ColorDefault)
+}
+
+func clearRect(rect geom.Rectangle, c rune, fg, bg termbox.Attribute) {
+	w, h := termbox.Size()
+	sz := geom.RectangleFromSize(geom.Coord{w, h})
+
+	toClear, ok := geom.RectangleIntersection(rect, sz)
+	if ok {
+		for y := toClear.Min.Y; y < toClear.Max.Y; y++ {
+			for x := toClear.Min.X; x < toClear.Max.X; x++ {
+				termbox.SetCell(x, y, ' ', termbox.ColorDefault, termbox.ColorDefault)
+			}
+		}
+	}
+}
+
+func clearRectDef(rect geom.Rectangle) {
+	clearRect(rect, '.', termbox.ColorDefault, termbox.ColorDefault)
 }
 
 type DisplayElement interface {
@@ -140,5 +159,42 @@ func (t *StaticText) Draw() {
 }
 
 func (t *StaticText) GiveFocus() bool {
+	return false
+}
+
+type ScrollingTextOutput struct {
+	x, y int
+	w, h int
+	text []string
+}
+
+func (t *ScrollingTextOutput) HandleInput(k termbox.Key, r rune) {
+}
+
+func (t *ScrollingTextOutput) Write(p []byte) (n int, err error) {
+	return len(p), nil
+}
+
+func (t *ScrollingTextOutput) WriteLine(l string) {
+	t.text = append(t.text, l)
+}
+
+func (t *ScrollingTextOutput) Draw() {
+	clearRectDef(geom.RectangleFromPosSize(geom.Coord{t.x, t.y}, geom.Coord{t.w, t.h}))
+
+	start := 0
+
+	if len(t.text) > t.h {
+		start = len(t.text) - t.h
+	}
+
+	y := t.y
+	for l := start; l < len(t.text); l++ {
+		printAtDef(t.x, y, t.text[l])
+		y++
+	}
+}
+
+func (t *ScrollingTextOutput) GiveFocus() bool {
 	return false
 }
