@@ -1,9 +1,16 @@
 package main
 
 import (
+	"fmt"
 	"github.com/nsf/termbox-go"
 	"github.com/simulatedsimian/emu6502/core6502"
+	"reflect"
+	"strconv"
 )
+
+func testFunc(ctx core6502.CPUContext, cmd string, x uint8, y uint16, s string) {
+
+}
 
 func main() {
 	err := termbox.Init()
@@ -22,14 +29,23 @@ func main() {
 	regDisp := RegisterDisplay{1, 1, &ctx}
 	memDisp := MemoryDisplay{30, 1, 0, &ctx}
 	stkDisp := StackDisplay{24, 1, &ctx}
-	logDisp := ScrollingTextOutput{1, 20, 80, 5, nil}
+	logDisp := ScrollingTextOutput{1, 20, 80, 10, nil}
 
 	cmdInput := MakeTextInputField(10, 18, func(inp string) {
 		if inp == "q" {
 			doQuit = true
 		}
 
-		logDisp.WriteLine(inp)
+		t := reflect.TypeOf(testFunc)
+		for n := 0; n < t.NumIn(); n++ {
+			logDisp.WriteLine(fmt.Sprint(t.In(n)))
+		}
+
+		logDisp.WriteLine(fmt.Sprint(t))
+
+		i, err := strconv.ParseInt(inp, 16, 16)
+
+		logDisp.WriteLine(fmt.Sprint(i, err))
 	})
 
 	dl.AddElement(cmdInput)
