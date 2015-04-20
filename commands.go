@@ -35,41 +35,50 @@ import (
 
 type commandInfo struct {
 	name, help string
-	handler    interface{}
+	handler    reflect.Value
 }
 
 var commands = []commandInfo{
-	{"sm", "Set Memory:   sm <address> <value>", setMemory},
-	{"sb", "Set Block:    smb <address> <count> <value>", setMemory},
-	{"sr", "Set Register: sr <reg> <value>", setReg},
+	{"sm", "Set Memory:   sm <address> <value>", reflect.ValueOf(setMemory)},
+	{"sb", "Set Block:    smb <address> <count> <value>", reflect.ValueOf(setMemoryBlock)},
+	{"sr", "Set Register: sr <reg> <value>", reflect.ValueOf(setReg)},
 }
 
 func processArgs(handler reflect.Value, ctx core6502.CPUContext, parts []string) ([]reflect.Value, error) {
 
-	args := []reflect.Value{reflect.ValueOf(ctx)}
+	args := []reflect.Value{}
+	args = append(args, reflect.ValueOf(ctx))
 
-	handler_t := reflect.TypeOf(handler)
+	handler_t := handler.Type()
+	//panic(fmt.Sprint(handler_t.In(1), reflect.TypeOf(uint8(0))))
 	for n := 0; n < handler_t.NumIn(); n++ {
 		switch handler_t.In(n) {
+
 		case reflect.TypeOf(uint8(0)):
-			i, err := strconv.ParseInt(parts[n], 16, 8)
+			i, err := strconv.ParseUint(parts[0], 16, 8)
 			if err != nil {
 				return nil, err
 			}
 			args = append(args, reflect.ValueOf(uint8(i)))
+			parts = parts[1:]
+
 		case reflect.TypeOf(uint16(0)):
-			i, err := strconv.ParseInt(parts[n], 16, 16)
+			i, err := strconv.ParseUint(parts[0], 16, 16)
 			if err != nil {
 				return nil, err
 			}
 			args = append(args, reflect.ValueOf(uint16(i)))
+			parts = parts[1:]
+
 		case reflect.TypeOf(""):
-			args = append(args, reflect.ValueOf(parts[n]))
+			args = append(args, reflect.ValueOf(parts[0]))
+			parts = parts[1:]
 		}
 	}
 
-	return nil
+	// todo verify arg count
 
+	return args, nil
 }
 
 func DispatchCommand(ctx core6502.CPUContext, cmd string) (bool, error) {
@@ -80,10 +89,17 @@ func DispatchCommand(ctx core6502.CPUContext, cmd string) (bool, error) {
 	parts := strings.Split(cmd, " ")
 	if len(parts) > 0 {
 		for n := 0; n < len(commands); n++ {
-			if commands[n].name == parts[0]
+			if commands[n].name == parts[0] {
+				args, err := processArgs(commands[n].handler, ctx, parts[1:])
+				if err != nil {
+					return false, err
+				}
+				commands[n].handler.Call(args)
+				return false, nil
+			}
 		}
+		return false, fmt.Errorf("Unknown Command: %s", parts[0])
 	}
-
 	return false, nil
 }
 
