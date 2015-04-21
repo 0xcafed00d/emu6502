@@ -1,7 +1,6 @@
 package main
 
 import (
-	//"errors"
 	"fmt"
 	"github.com/simulatedsimian/emu6502/core6502"
 	"reflect"
@@ -9,52 +8,29 @@ import (
 	"strings"
 )
 
-/*
-	var test interface{}
-
-	test = ctx
-	logDisp.WriteLine(fmt.Sprint(reflect.TypeOf(test)))
-
-	t := reflect.TypeOf(testFunc)
-	for n := 0; n < t.NumIn(); n++ {
-		logDisp.WriteLine(fmt.Sprint(t.In(n)))
-	}
-
-	testFuncVal := reflect.ValueOf(testFunc)
-
-	args := []reflect.Value{reflect.ValueOf("str"), reflect.ValueOf(uint8(22)), reflect.ValueOf(uint16(7625))}
-
-	testFuncVal.Call(args)
-
-	logDisp.WriteLine(fmt.Sprint(t))
-
-	//		i, err := strconv.ParseInt(inp, 16, 16)
-
-	//		logDisp.WriteLine(fmt.Sprint(i, err))
-*/
-
 type commandInfo struct {
-	name, help string
-	handler    reflect.Value
+	help    string
+	handler reflect.Value
 }
 
-var commands = []commandInfo{
-	{"sm", "Set Memory:   sm <address> <value>", reflect.ValueOf(setMemory)},
-	{"sb", "Set Block:    smb <address> <count> <value>", reflect.ValueOf(setMemoryBlock)},
-	{"sr", "Set Register: sr <reg> <value>", reflect.ValueOf(setReg)},
+var commands = map[string]commandInfo{
+	"sm": {"Set Memory:   sm <address> <value>", reflect.ValueOf(setMemory)},
+	"sb": {"Set Block:    sb <address> <count> <value>", reflect.ValueOf(setMemoryBlock)},
+	"sr": {"Set Register: sr <reg> <value>", reflect.ValueOf(setReg)},
 }
 
-func processArgs(handler reflect.Value, ctx core6502.CPUContext, parts []string) ([]reflect.Value, error) {
+func processArgs(cmd commandInfo, ctx core6502.CPUContext, parts []string) ([]reflect.Value, error) {
 
-	args := []reflect.Value{}
-	args = append(args, reflect.ValueOf(ctx))
+	args := []reflect.Value{reflect.ValueOf(ctx)}
 
-	handler_t := handler.Type()
-	//panic(fmt.Sprint(handler_t.In(1), reflect.TypeOf(uint8(0))))
-	for n := 0; n < handler_t.NumIn(); n++ {
-		switch handler_t.In(n) {
+	for n := 0; n < cmd.handler.Type().NumIn(); n++ {
+		if len(parts) == 0 {
+			return nil, fmt.Errorf("Not enough Args: %s", cmd.help)
+		}
 
-		case reflect.TypeOf(uint8(0)):
+		switch cmd.handler.Type().In(n).Kind() {
+
+		case reflect.Uint8:
 			i, err := strconv.ParseUint(parts[0], 16, 8)
 			if err != nil {
 				return nil, err
@@ -62,7 +38,7 @@ func processArgs(handler reflect.Value, ctx core6502.CPUContext, parts []string)
 			args = append(args, reflect.ValueOf(uint8(i)))
 			parts = parts[1:]
 
-		case reflect.TypeOf(uint16(0)):
+		case reflect.Uint16:
 			i, err := strconv.ParseUint(parts[0], 16, 16)
 			if err != nil {
 				return nil, err
@@ -70,13 +46,15 @@ func processArgs(handler reflect.Value, ctx core6502.CPUContext, parts []string)
 			args = append(args, reflect.ValueOf(uint16(i)))
 			parts = parts[1:]
 
-		case reflect.TypeOf(""):
+		case reflect.String:
 			args = append(args, reflect.ValueOf(parts[0]))
 			parts = parts[1:]
 		}
 	}
 
-	// todo verify arg count
+	if len(parts) > 0 {
+		return nil, fmt.Errorf("Too Many Args: %s", cmd.help)
+	}
 
 	return args, nil
 }
@@ -87,18 +65,16 @@ func DispatchCommand(ctx core6502.CPUContext, cmd string) (bool, error) {
 	}
 
 	parts := strings.Split(cmd, " ")
-	if len(parts) > 0 {
-		for n := 0; n < len(commands); n++ {
-			if commands[n].name == parts[0] {
-				args, err := processArgs(commands[n].handler, ctx, parts[1:])
-				if err != nil {
-					return false, err
-				}
-				commands[n].handler.Call(args)
-				return false, nil
+	if len(parts) > 0 && parts[0] != "" {
+		if cmd, ok := commands[parts[0]]; ok {
+			if args, err := processArgs(cmd, ctx, parts[1:]); err == nil {
+				cmd.handler.Call(args)
+			} else {
+				return false, err
 			}
+		} else {
+			return false, fmt.Errorf("Unknown Command: %s", parts[0])
 		}
-		return false, fmt.Errorf("Unknown Command: %s", parts[0])
 	}
 	return false, nil
 }

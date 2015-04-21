@@ -7,6 +7,7 @@ import (
 )
 
 func main() {
+
 	err := termbox.Init()
 	if err != nil {
 		panic(err)
