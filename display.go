@@ -84,11 +84,11 @@ type StackDisplay struct {
 }
 
 func (sd *StackDisplay) Draw() {
-	sp := sd.ctx.RegSP()
+	sp := sd.ctx.RegSP() + 1
 
 	for l := 0; l < 16; l++ {
 		printAtDef(sd.x, sd.y+l, fmt.Sprintf("$%02x", sd.ctx.Peek(uint16(sp)+0x100)))
-		sp--
+		sp++
 	}
 }
 

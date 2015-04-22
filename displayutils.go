@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	//	"fmt"
 	"github.com/nsf/termbox-go"
 	"github.com/simulatedsimian/go_sandbox/geom"
 )
@@ -134,7 +134,7 @@ func (t *TextInputField) HandleInput(k termbox.Key, r rune) {
 	}
 
 	termbox.SetCursor(t.x+t.cursorLoc, t.y)
-	printAtDef(t.x, t.y+1, fmt.Sprintf("%v, %v               ", k, r))
+	//	printAtDef(t.x, t.y+1, fmt.Sprintf("%v, %v               ", k, r))
 }
 
 func (t *TextInputField) Draw() {

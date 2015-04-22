@@ -17,6 +17,7 @@ var commands = map[string]commandInfo{
 	"sm": {"Set Memory:   sm <address> <value>", reflect.ValueOf(setMemory)},
 	"sb": {"Set Block:    sb <address> <count> <value>", reflect.ValueOf(setMemoryBlock)},
 	"sr": {"Set Register: sr <reg> <value>", reflect.ValueOf(setReg)},
+	"ps": {"Push Stack:   ps <value>", reflect.ValueOf(push)},
 }
 
 func processArgs(cmd commandInfo, ctx core6502.CPUContext, parts []string) ([]reflect.Value, error) {
@@ -81,6 +82,13 @@ func DispatchCommand(ctx core6502.CPUContext, cmd string) (bool, error) {
 
 func setMemory(ctx core6502.CPUContext, addr uint16, val uint8) error {
 	ctx.Poke(addr, val)
+	return nil
+}
+
+func push(ctx core6502.CPUContext, val uint8) error {
+	sp := ctx.RegSP()
+	ctx.Poke(0x100+uint16(sp), val)
+	ctx.SetRegSP(sp - 1)
 	return nil
 }
 
