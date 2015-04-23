@@ -1,9 +1,21 @@
 package core6502
 
-func setFlagsFromValue(ctx CPUContext, val uint8) uint8 {
-	ctx.SetFlag(Flag_Z, val == 0)
-	ctx.SetFlag(Flag_N, (val&0x80) == 0x80)
-	return val
+import (
+	"fmt"
+)
+
+/*
+	Executes the next instruction from the supplied CPUContext.
+	Results of the execution are written back to the provided context
+	Returns the number of clock cycles consumed by the instruction
+	and an error. An error is returned on the condition of an invalid
+	opcode.
+*/
+func Execute(ctx CPUContext) (int, error) {
+	pc := ctx.RegPC()
+	opcode := ctx.Peek(pc)
+
+	return 0, fmt.Errorf("Invalid Opcode: $%02x @ $%04x", opcode, pc)
 }
 
 type instrExec func(ctx CPUContext, pc uint16) int
@@ -11,6 +23,12 @@ type instrExec func(ctx CPUContext, pc uint16) int
 var executors = []instrExec{
 	exec_LDA_immediate,
 	exec_LDA_zeropage,
+}
+
+func setFlagsFromValue(ctx CPUContext, val uint8) uint8 {
+	ctx.SetFlag(Flag_Z, val == 0)
+	ctx.SetFlag(Flag_N, (val&0x80) == 0x80)
+	return val
 }
 
 func exec_LDA_immediate(ctx CPUContext, pc uint16) int {

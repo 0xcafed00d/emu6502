@@ -18,13 +18,14 @@ var commands = map[string]commandInfo{
 	"sb": {"Set Block:    sb <address> <count> <value>", reflect.ValueOf(setMemoryBlock)},
 	"sr": {"Set Register: sr <reg> <value>", reflect.ValueOf(setReg)},
 	"ps": {"Push Stack:   ps <value>", reflect.ValueOf(push)},
+	"x":  {"Exec Instruction: x", reflect.ValueOf(execInstr)},
 }
 
 func processArgs(cmd commandInfo, ctx core6502.CPUContext, parts []string) ([]reflect.Value, error) {
 
 	args := []reflect.Value{reflect.ValueOf(ctx)}
 
-	for n := 0; n < cmd.handler.Type().NumIn(); n++ {
+	for n := 1; n < cmd.handler.Type().NumIn(); n++ {
 		if len(parts) == 0 {
 			return nil, fmt.Errorf("Not enough Args: %s", cmd.help)
 		}
@@ -69,7 +70,12 @@ func DispatchCommand(ctx core6502.CPUContext, cmd string) (bool, error) {
 	if len(parts) > 0 && parts[0] != "" {
 		if cmd, ok := commands[parts[0]]; ok {
 			if args, err := processArgs(cmd, ctx, parts[1:]); err == nil {
-				cmd.handler.Call(args)
+				ret := cmd.handler.Call(args)[0].Interface()
+				if ret == nil {
+					return false, nil
+				} else {
+					return false, ret.(error)
+				}
 			} else {
 				return false, err
 			}
@@ -99,6 +105,11 @@ func setMemoryBlock(ctx core6502.CPUContext, addr uint16, count uint16, val uint
 		count--
 	}
 	return nil
+}
+
+func execInstr(ctx core6502.CPUContext) error {
+	_, err := core6502.Execute(ctx)
+	return err
 }
 
 func setReg(ctx core6502.CPUContext, reg string, val uint8) error {
