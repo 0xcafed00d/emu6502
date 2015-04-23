@@ -51,6 +51,9 @@ func (dl *DisplayList) AddElement(elem DisplayElement) {
 }
 
 func (dl *DisplayList) Draw() {
+	w, h := termbox.Size()
+	clearRectDef(geom.RectangleFromSize(geom.Coord{w, h}))
+
 	for _, elem := range dl.list {
 		elem.Draw()
 	}
@@ -105,17 +108,43 @@ type TextInputField struct {
 	cursorLoc  int
 	inpHandler InputHandler
 	hasFocus   bool
+	history    [][]rune
+	histPos    int
 }
 
 func MakeTextInputField(x, y int, inpHandler InputHandler) *TextInputField {
-	return &TextInputField{x, y, nil, 0, inpHandler, false}
+	return &TextInputField{x, y, nil, 0, inpHandler, false, nil, -1}
 }
 
 func (t *TextInputField) HandleInput(k termbox.Key, r rune) {
 	if k == termbox.KeyEnter {
+		t.history = append(t.history, t.inp)
+		t.histPos = len(t.history) - 1
 		t.inpHandler(string(t.inp))
-		t.inp = t.inp[0:0]
+		t.inp = nil
 		t.cursorLoc = 0
+	}
+
+	if k == termbox.KeyArrowUp {
+		if len(t.history) > 0 {
+			t.inp = nil
+			t.inp = append(t.inp, t.history[t.histPos]...)
+			t.cursorLoc = len(t.inp)
+			if t.histPos > 0 {
+				t.histPos--
+			}
+		}
+	}
+
+	if k == termbox.KeyArrowDown {
+		if len(t.history) > 0 {
+			t.inp = nil
+			t.inp = append(t.inp, t.history[t.histPos]...)
+			t.cursorLoc = len(t.inp)
+			if t.histPos < (len(t.history) - 1) {
+				t.histPos++
+			}
+		}
 	}
 
 	if r > ' ' {

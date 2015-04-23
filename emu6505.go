@@ -19,8 +19,6 @@ func main() {
 
 	doQuit := false
 
-	dl := DisplayList{}
-
 	regDisp := RegisterDisplay{1, 1, &ctx}
 	memDisp := MemoryDisplay{30, 1, 0, &ctx}
 	stkDisp := StackDisplay{24, 1, &ctx}
@@ -34,6 +32,7 @@ func main() {
 		}
 	})
 
+	dl := DisplayList{}
 	dl.AddElement(cmdInput)
 	dl.AddElement(&regDisp)
 	dl.AddElement(&memDisp)
