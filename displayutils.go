@@ -2,6 +2,7 @@ package main
 
 import (
 	//	"fmt"
+	"container/list"
 	"github.com/nsf/termbox-go"
 	"github.com/simulatedsimian/go_sandbox/geom"
 )
@@ -108,42 +109,55 @@ type TextInputField struct {
 	cursorLoc  int
 	inpHandler InputHandler
 	hasFocus   bool
-	history    [][]rune
-	histPos    int
+	history    *list.List
+	histPos    *list.Element
 }
 
 func MakeTextInputField(x, y int, inpHandler InputHandler) *TextInputField {
-	return &TextInputField{x, y, nil, 0, inpHandler, false, nil, -1}
+	return &TextInputField{x, y, nil, 0, inpHandler, false, list.New(), nil}
 }
 
 func (t *TextInputField) HandleInput(k termbox.Key, r rune) {
 	if k == termbox.KeyEnter {
-		t.history = append(t.history, t.inp)
-		t.histPos = len(t.history) - 1
+		if t.histPos == nil {
+			t.history.PushBack(t.inp)
+		} else {
+			t.history.MoveToBack(t.histPos)
+		}
+		t.histPos = nil
+
 		t.inpHandler(string(t.inp))
 		t.inp = nil
 		t.cursorLoc = 0
 	}
 
 	if k == termbox.KeyArrowUp {
-		if len(t.history) > 0 {
-			t.inp = nil
-			t.inp = append(t.inp, t.history[t.histPos]...)
-			t.cursorLoc = len(t.inp)
-			if t.histPos > 0 {
-				t.histPos--
+		if t.history.Len() > 0 {
+			if t.histPos == nil {
+				t.histPos = t.history.Back()
+			} else {
+				t.histPos = t.histPos.Prev()
+				if t.histPos == nil {
+					t.histPos = t.history.Front()
+				}
 			}
+			t.inp = nil
+			t.inp = append(t.inp, t.histPos.Value.([]rune)...)
+			t.cursorLoc = len(t.inp)
 		}
 	}
 
 	if k == termbox.KeyArrowDown {
-		if len(t.history) > 0 {
-			t.inp = nil
-			t.inp = append(t.inp, t.history[t.histPos]...)
-			t.cursorLoc = len(t.inp)
-			if t.histPos < (len(t.history) - 1) {
-				t.histPos++
+		if t.history.Len() > 0 {
+			if t.histPos != nil {
+				t.histPos = t.histPos.Next()
 			}
+
+			t.inp = nil
+			if t.histPos != nil {
+				t.inp = append(t.inp, t.histPos.Value.([]rune)...)
+			}
+			t.cursorLoc = len(t.inp)
 		}
 	}
 
