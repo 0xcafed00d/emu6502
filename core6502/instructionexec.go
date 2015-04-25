@@ -15,14 +15,27 @@ func Execute(ctx CPUContext) (int, error) {
 	pc := ctx.RegPC()
 	opcode := ctx.Peek(pc)
 
-	return 0, fmt.Errorf("Invalid Opcode: $%02x @ $%04x", opcode, pc)
+	if executors[opcode].exec == nil {
+		return 0, fmt.Errorf("Invalid Opcode: $%02x @ $%04x", opcode, pc)
+	}
+
+	return executors[opcode].exec(ctx, &executors[opcode]), nil
 }
 
-type instrExec func(ctx CPUContext, pc uint16) int
+type InstructionExecFunc func(ctx CPUContext, execInfo *ExecInfo) int
 
-var executors = []instrExec{
-	exec_LDA_immediate,
-	exec_LDA_zeropage,
+type ExecInfo struct {
+	exec    InstructionExecFunc
+	mode    AddrModeFunc
+	length  uint16
+	tstates int
+}
+
+var executors = [256]ExecInfo{}
+
+func init() {
+	executors[0x01] = ExecInfo{LDA, ReadAbsoluteZeroPage, 2, 3}
+	executors[0x02] = ExecInfo{STA, WriteAbsoluteZeroPage, 2, 3}
 }
 
 func setFlagsFromValue(ctx CPUContext, val uint8) uint8 {
@@ -31,12 +44,20 @@ func setFlagsFromValue(ctx CPUContext, val uint8) uint8 {
 	return val
 }
 
-func exec_LDA_immediate(ctx CPUContext, pc uint16) int {
-	ctx.SetRegA(setFlagsFromValue(ctx, ctx.Peek(pc+1)))
-	ctx.SetRegPC(pc + 2)
-	return 2
+func LDA(ctx CPUContext, info *ExecInfo) int {
+	val, exclock := info.mode(ctx, 0)
+	ctx.SetRegA(setFlagsFromValue(ctx, val))
+	ctx.SetRegPC(ctx.RegPC() + info.length)
+	return info.tstates + exclock
 }
 
+func STA(ctx CPUContext, info *ExecInfo) int {
+	_, exclock := info.mode(ctx, ctx.RegA())
+	ctx.SetRegPC(ctx.RegPC() + info.length)
+	return info.tstates + exclock
+}
+
+/*
 func exec_LDA_zeropage(ctx CPUContext, pc uint16) int {
 	ctx.SetRegA(setFlagsFromValue(ctx, ctx.Peek(uint16(ctx.Peek(pc+1)))))
 	ctx.SetRegPC(pc + 2)
@@ -78,3 +99,4 @@ func exec_LDA_absoluteY(ctx CPUContext, pc uint16) int {
 		return 5
 	}
 }
+*/

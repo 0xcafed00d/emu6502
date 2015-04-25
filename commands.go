@@ -14,11 +14,13 @@ type commandInfo struct {
 }
 
 var commands = map[string]commandInfo{
-	"sm": {"Set Memory:   sm <address> <value>", reflect.ValueOf(setMemory)},
-	"sb": {"Set Block:    sb <address> <count> <value>", reflect.ValueOf(setMemoryBlock)},
-	"sr": {"Set Register: sr <reg> <value>", reflect.ValueOf(setReg)},
-	"ps": {"Push Stack:   ps <value>", reflect.ValueOf(push)},
-	"x":  {"Exec Instruction: x", reflect.ValueOf(execInstr)},
+	"sm":        {"Set Memory:   sm <address> <value>", reflect.ValueOf(setMemory)},
+	"sb":        {"Set Block:    sb <address> <count> <value>", reflect.ValueOf(setMemoryBlock)},
+	"sr":        {"Set Register: sr <reg> <value>", reflect.ValueOf(setReg)},
+	"ps":        {"Push Stack:   ps <value>", reflect.ValueOf(push)},
+	"x":         {"Exec Instruction: x", reflect.ValueOf(execInstr)},
+	"softreset": {"", reflect.ValueOf(core6502.SoftResetCPU)},
+	"hardreset": {"", reflect.ValueOf(core6502.HardResetCPU)},
 }
 
 func processArgs(cmd commandInfo, ctx core6502.CPUContext, parts []string) ([]reflect.Value, error) {
@@ -70,11 +72,11 @@ func DispatchCommand(ctx core6502.CPUContext, cmd string) (bool, error) {
 	if len(parts) > 0 && parts[0] != "" {
 		if cmd, ok := commands[parts[0]]; ok {
 			if args, err := processArgs(cmd, ctx, parts[1:]); err == nil {
-				ret := cmd.handler.Call(args)[0].Interface()
-				if ret == nil {
+				ret := cmd.handler.Call(args)
+				if len(ret) == 0 || ret[0].Interface() == nil {
 					return false, nil
 				} else {
-					return false, ret.(error)
+					return false, ret[0].Interface().(error)
 				}
 			} else {
 				return false, err
