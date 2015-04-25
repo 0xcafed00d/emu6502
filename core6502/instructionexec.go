@@ -26,16 +26,31 @@ type InstructionExecFunc func(ctx CPUContext, execInfo *ExecInfo) int
 
 type ExecInfo struct {
 	exec    InstructionExecFunc
-	mode    AddrModeFunc
 	length  uint16
 	tstates int
+	mode    AddrModeFunc
 }
 
 var executors = [256]ExecInfo{}
 
 func init() {
-	executors[0x01] = ExecInfo{LDA, ReadAbsoluteZeroPage, 2, 3}
-	executors[0x02] = ExecInfo{STA, WriteAbsoluteZeroPage, 2, 3}
+	executors[0xA9] = ExecInfo{LDA, 2, 2, ReadImmediate}
+	executors[0xA5] = ExecInfo{LDA, 2, 3, ReadAbsoluteZeroPage}
+	executors[0xB5] = ExecInfo{LDA, 2, 4, ReadZeroPageIdxX}
+	executors[0xAD] = ExecInfo{LDA, 3, 4, ReadAbsolute}
+
+	executors[0x85] = ExecInfo{STA, 2, 3, WriteAbsoluteZeroPage}
+
+	executors[0x18] = ExecInfo{CLC, 1, 2, nil}
+	executors[0x38] = ExecInfo{SEC, 1, 2, nil}
+
+	executors[0xaa] = ExecInfo{TAX, 1, 2, nil}
+	executors[0xa8] = ExecInfo{TAY, 1, 2, nil}
+	executors[0xba] = ExecInfo{TSX, 1, 2, nil}
+	executors[0x8a] = ExecInfo{TXA, 1, 2, nil}
+	executors[0x9a] = ExecInfo{TXS, 1, 2, nil}
+	executors[0x98] = ExecInfo{TYA, 1, 2, nil}
+
 }
 
 func setFlagsFromValue(ctx CPUContext, val uint8) uint8 {
@@ -55,6 +70,54 @@ func STA(ctx CPUContext, info *ExecInfo) int {
 	_, exclock := info.mode(ctx, ctx.RegA())
 	ctx.SetRegPC(ctx.RegPC() + info.length)
 	return info.tstates + exclock
+}
+
+func CLC(ctx CPUContext, info *ExecInfo) int {
+	ctx.SetFlag(Flag_C, false)
+	ctx.SetRegPC(ctx.RegPC() + info.length)
+	return info.tstates
+}
+
+func SEC(ctx CPUContext, info *ExecInfo) int {
+	ctx.SetFlag(Flag_C, true)
+	ctx.SetRegPC(ctx.RegPC() + info.length)
+	return info.tstates
+}
+
+func TAX(ctx CPUContext, info *ExecInfo) int {
+	ctx.SetRegX(setFlagsFromValue(ctx, ctx.RegA()))
+	ctx.SetRegPC(ctx.RegPC() + info.length)
+	return info.tstates
+}
+
+func TAY(ctx CPUContext, info *ExecInfo) int {
+	ctx.SetRegY(setFlagsFromValue(ctx, ctx.RegA()))
+	ctx.SetRegPC(ctx.RegPC() + info.length)
+	return info.tstates
+}
+
+func TSX(ctx CPUContext, info *ExecInfo) int {
+	ctx.SetRegX(setFlagsFromValue(ctx, ctx.RegSP()))
+	ctx.SetRegPC(ctx.RegPC() + info.length)
+	return info.tstates
+}
+
+func TXA(ctx CPUContext, info *ExecInfo) int {
+	ctx.SetRegA(setFlagsFromValue(ctx, ctx.RegX()))
+	ctx.SetRegPC(ctx.RegPC() + info.length)
+	return info.tstates
+}
+
+func TXS(ctx CPUContext, info *ExecInfo) int {
+	ctx.SetRegSP(ctx.RegX())
+	ctx.SetRegPC(ctx.RegPC() + info.length)
+	return info.tstates
+}
+
+func TYA(ctx CPUContext, info *ExecInfo) int {
+	ctx.SetRegA(setFlagsFromValue(ctx, ctx.RegY()))
+	ctx.SetRegPC(ctx.RegPC() + info.length)
+	return info.tstates
 }
 
 /*
