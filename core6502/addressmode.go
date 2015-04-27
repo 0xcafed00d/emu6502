@@ -5,7 +5,7 @@ type AddressMode int
 const (
 	AddrMode_Implicit         AddressMode = iota
 	AddrMode_Immediate        AddressMode = iota
-	AddrMode_AbsolutePageZero AddressMode = iota
+	AddrMode_AbsoluteZeroPage AddressMode = iota
 	AddrMode_Absolute         AddressMode = iota
 	AddrMode_ZeroPageIdxX     AddressMode = iota
 	AddrMode_ZeroPageIdxY     AddressMode = iota
@@ -22,7 +22,7 @@ func GetReadFunc(mode AddressMode) AddrModeReadFunc {
 		return ReadImmediate
 	case AddrMode_Absolute:
 		return ReadAbsolute
-	case AddrMode_AbsolutePageZero:
+	case AddrMode_AbsoluteZeroPage:
 		return ReadAbsoluteZeroPage
 	case AddrMode_ZeroPageIdxX:
 		return ReadZeroPageIdxX
@@ -37,7 +37,7 @@ func GetWriteFunc(mode AddressMode) AddrModeWriteFunc {
 	switch mode {
 	case AddrMode_Absolute:
 		return WriteAbsolute
-	case AddrMode_AbsolutePageZero:
+	case AddrMode_AbsoluteZeroPage:
 		return WriteAbsoluteZeroPage
 	case AddrMode_ZeroPageIdxX:
 		return WriteZeroPageIdxX

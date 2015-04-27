@@ -23,7 +23,7 @@ func Execute(ctx CPUContext) (int, error) {
 }
 
 type InstructionExecFunc func(ctx CPUContext) int
-type ExecFuncMakerFunc func(execInfo *InstructionInfo) InstructionExecFunc
+type ExecFuncMakerFunc func(InstructionInfo *InstructionInfo) InstructionExecFunc
 
 type InstructionInfo struct {
 	opcode    uint8
@@ -36,18 +36,18 @@ type InstructionInfo struct {
 
 var InstructionData = []InstructionInfo{
 	{0xa9, "LDA", LDA, 2, 2, AddrMode_Immediate},
-	{0xa5, "LDA", LDA, 2, 3, AddrMode_AbsolutePageZero},
+	{0xa5, "LDA", LDA, 2, 3, AddrMode_AbsoluteZeroPage},
 	{0xb5, "LDA", LDA, 2, 4, AddrMode_ZeroPageIdxX},
 	{0xad, "LDA", LDA, 3, 4, AddrMode_Absolute},
-	{0x85, "STA", STA, 2, 3, AddrMode_AbsolutePageZero},
-	/*{0x18, "CLC", CLC, 1, 2, AddrMode_Implicit},
+	{0x85, "STA", STA, 2, 3, AddrMode_AbsoluteZeroPage},
+	{0x18, "CLC", CLC, 1, 2, AddrMode_Implicit},
 	{0x38, "SEC", SEC, 1, 2, AddrMode_Implicit},
 	{0xaa, "TAX", TAX, 1, 2, AddrMode_Implicit},
 	{0xa8, "TAY", TAY, 1, 2, AddrMode_Implicit},
 	{0xba, "TSX", TSX, 1, 2, AddrMode_Implicit},
 	{0x8a, "TXA", TXA, 1, 2, AddrMode_Implicit},
 	{0x9a, "TXS", TXS, 1, 2, AddrMode_Implicit},
-	{0x98, "TYA", TYA, 1, 2, AddrMode_Implicit},*/
+	{0x98, "TYA", TYA, 1, 2, AddrMode_Implicit},
 }
 
 var executors [256]InstructionExecFunc
@@ -86,52 +86,66 @@ func STA(info *InstructionInfo) InstructionExecFunc {
 	}
 }
 
-/*
-func CLC(ctx CPUContext, info *ExecInfo) int {
-	ctx.SetFlag(Flag_C, false)
-	ctx.SetRegPC(ctx.RegPC() + info.length)
-	return info.tstates
+func CLC(info *InstructionInfo) InstructionExecFunc {
+	return func(ctx CPUContext) int {
+		ctx.SetFlag(Flag_C, false)
+		ctx.SetRegPC(ctx.RegPC() + info.length)
+		return info.tstates
+	}
 }
 
-func SEC(ctx CPUContext, info *ExecInfo) int {
-	ctx.SetFlag(Flag_C, true)
-	ctx.SetRegPC(ctx.RegPC() + info.length)
-	return info.tstates
+func SEC(info *InstructionInfo) InstructionExecFunc {
+	return func(ctx CPUContext) int {
+		ctx.SetFlag(Flag_C, true)
+		ctx.SetRegPC(ctx.RegPC() + info.length)
+		return info.tstates
+	}
 }
 
-func TAX(ctx CPUContext, info *ExecInfo) int {
-	ctx.SetRegX(setFlagsFromValue(ctx, ctx.RegA()))
-	ctx.SetRegPC(ctx.RegPC() + info.length)
-	return info.tstates
+func TAX(info *InstructionInfo) InstructionExecFunc {
+	return func(ctx CPUContext) int {
+		ctx.SetRegX(setFlagsFromValue(ctx, ctx.RegA()))
+		ctx.SetRegPC(ctx.RegPC() + info.length)
+		return info.tstates
+	}
 }
 
-func TAY(ctx CPUContext, info *ExecInfo) int {
-	ctx.SetRegY(setFlagsFromValue(ctx, ctx.RegA()))
-	ctx.SetRegPC(ctx.RegPC() + info.length)
-	return info.tstates
+func TAY(info *InstructionInfo) InstructionExecFunc {
+	return func(ctx CPUContext) int {
+		ctx.SetRegY(setFlagsFromValue(ctx, ctx.RegA()))
+		ctx.SetRegPC(ctx.RegPC() + info.length)
+		return info.tstates
+	}
 }
 
-func TSX(ctx CPUContext, info *ExecInfo) int {
-	ctx.SetRegX(setFlagsFromValue(ctx, ctx.RegSP()))
-	ctx.SetRegPC(ctx.RegPC() + info.length)
-	return info.tstates
+func TSX(info *InstructionInfo) InstructionExecFunc {
+	return func(ctx CPUContext) int {
+		ctx.SetRegX(setFlagsFromValue(ctx, ctx.RegSP()))
+		ctx.SetRegPC(ctx.RegPC() + info.length)
+		return info.tstates
+	}
 }
 
-func TXA(ctx CPUContext, info *ExecInfo) int {
-	ctx.SetRegA(setFlagsFromValue(ctx, ctx.RegX()))
-	ctx.SetRegPC(ctx.RegPC() + info.length)
-	return info.tstates
+func TXA(info *InstructionInfo) InstructionExecFunc {
+	return func(ctx CPUContext) int {
+		ctx.SetRegA(setFlagsFromValue(ctx, ctx.RegX()))
+		ctx.SetRegPC(ctx.RegPC() + info.length)
+		return info.tstates
+	}
 }
 
-func TXS(ctx CPUContext, info *ExecInfo) int {
-	ctx.SetRegSP(ctx.RegX())
-	ctx.SetRegPC(ctx.RegPC() + info.length)
-	return info.tstates
+func TXS(info *InstructionInfo) InstructionExecFunc {
+	return func(ctx CPUContext) int {
+		ctx.SetRegSP(ctx.RegX())
+		ctx.SetRegPC(ctx.RegPC() + info.length)
+		return info.tstates
+	}
 }
 
-func TYA(ctx CPUContext, info *ExecInfo) int {
-	ctx.SetRegA(setFlagsFromValue(ctx, ctx.RegY()))
-	ctx.SetRegPC(ctx.RegPC() + info.length)
-	return info.tstates
+func TYA(info *InstructionInfo) InstructionExecFunc {
+	return func(ctx CPUContext) int {
+		ctx.SetRegA(setFlagsFromValue(ctx, ctx.RegY()))
+		ctx.SetRegPC(ctx.RegPC() + info.length)
+		return info.tstates
+	}
 }
-*/
