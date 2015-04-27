@@ -15,42 +15,48 @@ func Execute(ctx CPUContext) (int, error) {
 	pc := ctx.RegPC()
 	opcode := ctx.Peek(pc)
 
-	if executors[opcode].exec == nil {
+	if executors[opcode] == nil {
 		return 0, fmt.Errorf("Invalid Opcode: $%02x @ $%04x", opcode, pc)
 	}
 
-	return executors[opcode].exec(ctx, &executors[opcode]), nil
+	return executors[opcode](ctx), nil
 }
 
-type InstructionExecFunc func(ctx CPUContext, execInfo *ExecInfo) int
+type InstructionExecFunc func(ctx CPUContext) int
+type ExecFuncMakerFunc func(execInfo *InstructionInfo) InstructionExecFunc
 
-type ExecInfo struct {
-	exec    InstructionExecFunc
-	length  uint16
-	tstates int
-	mode    AddrModeFunc
+type InstructionInfo struct {
+	opcode    uint8
+	name      string
+	execMaker ExecFuncMakerFunc
+	length    uint16
+	tstates   int
+	mode      AddressMode
 }
 
-var executors = [256]ExecInfo{}
+var InstructionData = []InstructionInfo{
+	{0xa9, "LDA", LDA, 2, 2, AddrMode_Immediate},
+	{0xa5, "LDA", LDA, 2, 3, AddrMode_AbsolutePageZero},
+	{0xb5, "LDA", LDA, 2, 4, AddrMode_ZeroPageIdxX},
+	{0xad, "LDA", LDA, 3, 4, AddrMode_Absolute},
+	{0x85, "STA", STA, 2, 3, AddrMode_AbsolutePageZero},
+	/*{0x18, "CLC", CLC, 1, 2, AddrMode_Implicit},
+	{0x38, "SEC", SEC, 1, 2, AddrMode_Implicit},
+	{0xaa, "TAX", TAX, 1, 2, AddrMode_Implicit},
+	{0xa8, "TAY", TAY, 1, 2, AddrMode_Implicit},
+	{0xba, "TSX", TSX, 1, 2, AddrMode_Implicit},
+	{0x8a, "TXA", TXA, 1, 2, AddrMode_Implicit},
+	{0x9a, "TXS", TXS, 1, 2, AddrMode_Implicit},
+	{0x98, "TYA", TYA, 1, 2, AddrMode_Implicit},*/
+}
+
+var executors [256]InstructionExecFunc
 
 func init() {
-	executors[0xA9] = ExecInfo{LDA, 2, 2, ReadImmediate}
-	executors[0xA5] = ExecInfo{LDA, 2, 3, ReadAbsoluteZeroPage}
-	executors[0xB5] = ExecInfo{LDA, 2, 4, ReadZeroPageIdxX}
-	executors[0xAD] = ExecInfo{LDA, 3, 4, ReadAbsolute}
-
-	executors[0x85] = ExecInfo{STA, 2, 3, WriteAbsoluteZeroPage}
-
-	executors[0x18] = ExecInfo{CLC, 1, 2, nil}
-	executors[0x38] = ExecInfo{SEC, 1, 2, nil}
-
-	executors[0xaa] = ExecInfo{TAX, 1, 2, nil}
-	executors[0xa8] = ExecInfo{TAY, 1, 2, nil}
-	executors[0xba] = ExecInfo{TSX, 1, 2, nil}
-	executors[0x8a] = ExecInfo{TXA, 1, 2, nil}
-	executors[0x9a] = ExecInfo{TXS, 1, 2, nil}
-	executors[0x98] = ExecInfo{TYA, 1, 2, nil}
-
+	for n := 0; n < len(InstructionData); n++ {
+		info := &InstructionData[n]
+		executors[info.opcode] = info.execMaker(info)
+	}
 }
 
 func setFlagsFromValue(ctx CPUContext, val uint8) uint8 {
@@ -59,19 +65,28 @@ func setFlagsFromValue(ctx CPUContext, val uint8) uint8 {
 	return val
 }
 
-func LDA(ctx CPUContext, info *ExecInfo) int {
-	val, exclock := info.mode(ctx, 0)
-	ctx.SetRegA(setFlagsFromValue(ctx, val))
-	ctx.SetRegPC(ctx.RegPC() + info.length)
-	return info.tstates + exclock
+func LDA(info *InstructionInfo) InstructionExecFunc {
+	readFunc := GetReadFunc(info.mode)
+
+	return func(ctx CPUContext) int {
+		val, exclock := readFunc(ctx)
+		ctx.SetRegA(setFlagsFromValue(ctx, val))
+		ctx.SetRegPC(ctx.RegPC() + info.length)
+		return info.tstates + exclock
+	}
 }
 
-func STA(ctx CPUContext, info *ExecInfo) int {
-	_, exclock := info.mode(ctx, ctx.RegA())
-	ctx.SetRegPC(ctx.RegPC() + info.length)
-	return info.tstates + exclock
+func STA(info *InstructionInfo) InstructionExecFunc {
+	writeFunc := GetWriteFunc(info.mode)
+
+	return func(ctx CPUContext) int {
+		exclock := writeFunc(ctx, ctx.RegA())
+		ctx.SetRegPC(ctx.RegPC() + info.length)
+		return info.tstates + exclock
+	}
 }
 
+/*
 func CLC(ctx CPUContext, info *ExecInfo) int {
 	ctx.SetFlag(Flag_C, false)
 	ctx.SetRegPC(ctx.RegPC() + info.length)
@@ -118,48 +133,5 @@ func TYA(ctx CPUContext, info *ExecInfo) int {
 	ctx.SetRegA(setFlagsFromValue(ctx, ctx.RegY()))
 	ctx.SetRegPC(ctx.RegPC() + info.length)
 	return info.tstates
-}
-
-/*
-func exec_LDA_zeropage(ctx CPUContext, pc uint16) int {
-	ctx.SetRegA(setFlagsFromValue(ctx, ctx.Peek(uint16(ctx.Peek(pc+1)))))
-	ctx.SetRegPC(pc + 2)
-	return 3
-}
-
-func exec_LDA_zeropageX(ctx CPUContext, pc uint16) int {
-	ctx.SetRegA(setFlagsFromValue(ctx, ctx.Peek(uint16(ctx.Peek(pc+1)+ctx.RegX()))))
-	ctx.SetRegPC(pc + 2)
-	return 4
-}
-
-func exec_LDA_absolute(ctx CPUContext, pc uint16) int {
-	ctx.SetRegA(setFlagsFromValue(ctx, ctx.Peek(ctx.PeekWord(pc+1))))
-	ctx.SetRegPC(pc + 3)
-	return 4
-}
-
-func exec_LDA_absoluteX(ctx CPUContext, pc uint16) int {
-	addr := ctx.PeekWord(pc + 1)
-	addrx := addr + uint16(ctx.RegX())
-	ctx.SetRegA(setFlagsFromValue(ctx, ctx.Peek(addrx)))
-	ctx.SetRegPC(pc + 3)
-	if (addr & 0xff00) == (addrx & 0xf00) {
-		return 4
-	} else {
-		return 5
-	}
-}
-
-func exec_LDA_absoluteY(ctx CPUContext, pc uint16) int {
-	addr := ctx.PeekWord(pc + 1)
-	addry := addr + uint16(ctx.RegY())
-	ctx.SetRegA(setFlagsFromValue(ctx, ctx.Peek(addry)))
-	ctx.SetRegPC(pc + 3)
-	if (addr & 0xff00) == (addry & 0xf00) {
-		return 4
-	} else {
-		return 5
-	}
 }
 */
