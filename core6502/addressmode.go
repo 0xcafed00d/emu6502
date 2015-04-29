@@ -3,6 +3,7 @@ package core6502
 type AddressMode int
 
 const (
+	AddrMode_Invalid          AddressMode = iota
 	AddrMode_Implicit         AddressMode = iota
 	AddrMode_Immediate        AddressMode = iota
 	AddrMode_AbsoluteZeroPage AddressMode = iota

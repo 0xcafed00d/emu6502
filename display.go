@@ -98,3 +98,26 @@ func (sd *StackDisplay) GiveFocus() bool {
 
 func (sd *StackDisplay) HandleInput(k termbox.Key, r rune) {
 }
+
+type DisasmDisplay struct {
+	x, y  int
+	lines int
+	ctx   core6502.CPUContext
+}
+
+func (dd *DisasmDisplay) Draw() {
+	pc := dd.ctx.RegPC()
+
+	for l := 0; l < dd.lines; l++ {
+		instr, len := core6502.Disassemble(dd.ctx, pc)
+		printAtDef(dd.x, dd.y+l, fmt.Sprintf("$%04x %s", pc, instr))
+		pc += len
+	}
+}
+
+func (dd *DisasmDisplay) GiveFocus() bool {
+	return false
+}
+
+func (dd *DisasmDisplay) HandleInput(k termbox.Key, r rune) {
+}
