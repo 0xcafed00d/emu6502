@@ -3,13 +3,19 @@ package core6502
 type AddressMode int
 
 const (
-	AddrMode_Invalid          AddressMode = iota
-	AddrMode_Implicit         AddressMode = iota
-	AddrMode_Immediate        AddressMode = iota
-	AddrMode_AbsoluteZeroPage AddressMode = iota
-	AddrMode_Absolute         AddressMode = iota
-	AddrMode_ZeroPageIdxX     AddressMode = iota
-	AddrMode_ZeroPageIdxY     AddressMode = iota
+	AddrMode_Invalid           AddressMode = iota
+	AddrMode_Implicit          AddressMode = iota
+	AddrMode_Immediate         AddressMode = iota
+	AddrMode_AbsoluteZeroPage  AddressMode = iota
+	AddrMode_Absolute          AddressMode = iota
+	AddrMode_ZeroPageIdxX      AddressMode = iota
+	AddrMode_ZeroPageIdxY      AddressMode = iota
+	AddrMode_PreIndexIndirect  AddressMode = iota
+	AddrMode_PostIndexIndirect AddressMode = iota
+	AddrMode_AbsoluteIndexedX  AddressMode = iota
+	AddrMode_AbsoluteIndexedY  AddressMode = iota
+	AddrMode_Indirect          AddressMode = iota
+	AddrMode_Relative          AddressMode = iota
 )
 
 type AddrModeReadFunc func(ctx CPUContext) (uint8, int)
@@ -29,6 +35,14 @@ func GetReadFunc(mode AddressMode) AddrModeReadFunc {
 		return ReadZeroPageIdxX
 	case AddrMode_ZeroPageIdxY:
 		return ReadZeroPageIdxY
+	case AddrMode_PreIndexIndirect:
+		return ReadPreIndexIndirect
+	case AddrMode_PostIndexIndirect:
+		return ReadPostIndexIndirect
+	case AddrMode_AbsoluteIndexedX:
+		return ReadAboluteIndexedX
+	case AddrMode_AbsoluteIndexedY:
+		return ReadAboluteIndexedY
 	}
 
 	panic("Invalid Address Mode")
@@ -44,6 +58,14 @@ func GetWriteFunc(mode AddressMode) AddrModeWriteFunc {
 		return WriteZeroPageIdxX
 	case AddrMode_ZeroPageIdxY:
 		return WriteZeroPageIdxY
+	case AddrMode_PreIndexIndirect:
+		return WritePreIndexIndirect
+	case AddrMode_PostIndexIndirect:
+		return WritePostIndexIndirect
+	case AddrMode_AbsoluteIndexedX:
+		return WriteAboluteIndexedX
+	case AddrMode_AbsoluteIndexedY:
+		return WriteAboluteIndexedY
 	}
 
 	panic("Invalid Address Mode")
@@ -95,5 +117,57 @@ func ReadZeroPageIdxY(ctx CPUContext) (uint8, int) {
 // $ff, y
 func WriteZeroPageIdxY(ctx CPUContext, val uint8) int {
 	ctx.Poke(uint16(ctx.Peek(ctx.RegPC()+1)+ctx.RegY()), val)
+	return 0
+}
+
+// ($ff, x)
+func ReadPreIndexIndirect(ctx CPUContext) (uint8, int) {
+	addr := ctx.PeekWord(uint16(ctx.Peek(ctx.RegPC()+1) + ctx.RegX()))
+	return ctx.Peek(addr), 0
+}
+
+// ($ff, x)
+func WritePreIndexIndirect(ctx CPUContext, val uint8) int {
+	addr := ctx.PeekWord(uint16(ctx.Peek(ctx.RegPC()+1) + ctx.RegX()))
+	ctx.Poke(addr, val)
+	return 0
+}
+
+// ($ff), y
+func ReadPostIndexIndirect(ctx CPUContext) (uint8, int) {
+	addr := ctx.PeekWord(uint16(ctx.Peek(ctx.RegPC()+1))) + uint16(ctx.RegY())
+	return ctx.Peek(addr), 0
+}
+
+// ($ff), y
+func WritePostIndexIndirect(ctx CPUContext, val uint8) int {
+	addr := ctx.PeekWord(uint16(ctx.Peek(ctx.RegPC()+1))) + uint16(ctx.RegY())
+	ctx.Poke(addr, val)
+	return 0
+}
+
+// $ffff, x
+func ReadAboluteIndexedX(ctx CPUContext) (uint8, int) {
+	addr := ctx.PeekWord(ctx.PeekWord(ctx.RegPC()+1)) + uint16(ctx.RegX())
+	return ctx.Peek(addr), 0
+}
+
+// $ffff, x
+func WriteAboluteIndexedX(ctx CPUContext, val uint8) int {
+	addr := ctx.PeekWord(ctx.PeekWord(ctx.RegPC()+1)) + uint16(ctx.RegX())
+	ctx.Poke(addr, val)
+	return 0
+}
+
+// $ffff, x
+func ReadAboluteIndexedY(ctx CPUContext) (uint8, int) {
+	addr := ctx.PeekWord(ctx.PeekWord(ctx.RegPC()+1)) + uint16(ctx.RegY())
+	return ctx.Peek(addr), 0
+}
+
+// $ffff, x
+func WriteAboluteIndexedY(ctx CPUContext, val uint8) int {
+	addr := ctx.PeekWord(ctx.PeekWord(ctx.RegPC()+1)) + uint16(ctx.RegY())
+	ctx.Poke(addr, val)
 	return 0
 }
