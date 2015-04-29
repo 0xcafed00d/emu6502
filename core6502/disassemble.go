@@ -33,6 +33,18 @@ func addressModeToStr(mode AddressMode, ctx CPUContext, addr uint16) string {
 		return fmt.Sprintf("$%02x, X", ctx.Peek(addr))
 	case AddrMode_ZeroPageIdxY:
 		return fmt.Sprintf("$%02x, X", ctx.Peek(addr))
+	case AddrMode_PreIndexIndirect:
+		return fmt.Sprintf("($%02x, X)", ctx.Peek(addr))
+	case AddrMode_PostIndexIndirect:
+		return fmt.Sprintf("($%02x), Y", ctx.Peek(addr))
+	case AddrMode_AbsoluteIndexedX:
+		return fmt.Sprintf("$%04x, X", ctx.PeekWord(addr))
+	case AddrMode_AbsoluteIndexedY:
+		return fmt.Sprintf("$%04x, Y", ctx.PeekWord(addr))
+	case AddrMode_Indirect:
+		return fmt.Sprintf("($%04x)", ctx.PeekWord(addr))
+	case AddrMode_Relative:
+		return fmt.Sprintf("%d", int(ctx.Peek(addr)))
 	}
 	return "Invalid"
 }
