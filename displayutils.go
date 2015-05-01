@@ -5,6 +5,8 @@ import (
 	"container/list"
 	"github.com/nsf/termbox-go"
 	"github.com/simulatedsimian/go_sandbox/geom"
+	"reflect"
+	"unicode"
 )
 
 func printAt(x, y int, s string, fg, bg termbox.Attribute) {
@@ -119,16 +121,19 @@ func MakeTextInputField(x, y int, inpHandler InputHandler) *TextInputField {
 
 func (t *TextInputField) HandleInput(k termbox.Key, r rune) {
 	if k == termbox.KeyEnter {
-		if t.histPos == nil {
-			t.history.PushBack(t.inp)
-		} else {
-			t.history.MoveToBack(t.histPos)
-		}
-		t.histPos = nil
+		t.inp = TrimRunes(t.inp, unicode.IsSpace)
+		if len(t.inp) > 0 {
+			if t.histPos != nil && reflect.DeepEqual(t.histPos.Value, t.inp) {
+				t.history.MoveToBack(t.histPos)
+			} else {
+				t.history.PushBack(t.inp)
+			}
+			t.histPos = nil
 
-		t.inpHandler(string(t.inp))
-		t.inp = nil
-		t.cursorLoc = 0
+			t.inpHandler(string(t.inp))
+			t.inp = nil
+			t.cursorLoc = 0
+		}
 	}
 
 	if k == termbox.KeyArrowUp {
@@ -141,8 +146,7 @@ func (t *TextInputField) HandleInput(k termbox.Key, r rune) {
 					t.histPos = t.history.Front()
 				}
 			}
-			t.inp = nil
-			t.inp = append(t.inp, t.histPos.Value.([]rune)...)
+			t.inp = CloneRuneSlice(t.histPos.Value.([]rune))
 			t.cursorLoc = len(t.inp)
 		}
 	}
