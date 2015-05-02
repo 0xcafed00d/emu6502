@@ -136,6 +136,23 @@ func (t *TextInputField) HandleInput(k termbox.Key, r rune) {
 		}
 	}
 
+	if k == termbox.KeyEsc {
+		t.inp = nil
+		t.cursorLoc = 0
+	}
+
+	if k == termbox.KeyArrowLeft {
+		if t.cursorLoc > 0 {
+			t.cursorLoc--
+		}
+	}
+
+	if k == termbox.KeyArrowRight {
+		if t.cursorLoc < len(t.inp) {
+			t.cursorLoc++
+		}
+	}
+
 	if k == termbox.KeyArrowUp {
 		if t.history.Len() > 0 {
 			if t.histPos == nil {
@@ -166,17 +183,17 @@ func (t *TextInputField) HandleInput(k termbox.Key, r rune) {
 	}
 
 	if r > ' ' {
-		t.inp = append(t.inp, r)
+		t.inp = InsertRuneAt(t.inp, r, t.cursorLoc)
 		t.cursorLoc++
 	}
 
 	if k == 32 {
-		t.inp = append(t.inp, ' ')
+		t.inp = InsertRuneAt(t.inp, ' ', t.cursorLoc)
 		t.cursorLoc++
 	}
 
-	if len(t.inp) > 0 && (k == termbox.KeyBackspace || k == termbox.KeyBackspace2) {
-		t.inp = t.inp[:len(t.inp)-1]
+	if t.cursorLoc > 0 && len(t.inp) > 0 && (k == termbox.KeyBackspace || k == termbox.KeyBackspace2) {
+		t.inp = DeleteRuneAt(t.inp, t.cursorLoc-1)
 		t.cursorLoc--
 	}
 
