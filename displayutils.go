@@ -197,6 +197,18 @@ func (t *TextInputField) HandleInput(k termbox.Key, r rune) {
 		t.cursorLoc--
 	}
 
+	if k == termbox.KeyDelete && t.cursorLoc < len(t.inp) {
+		t.inp = DeleteRuneAt(t.inp, t.cursorLoc)
+	}
+
+	if k == termbox.KeyHome {
+		t.cursorLoc = 0
+	}
+
+	if k == termbox.KeyEnd {
+		t.cursorLoc = len(t.inp)
+	}
+
 	termbox.SetCursor(t.x+t.cursorLoc, t.y)
 	//	printAtDef(t.x, t.y+1, fmt.Sprintf("%v, %v               ", k, r))
 }
