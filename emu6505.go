@@ -44,6 +44,7 @@ func main() {
 	dl.AddElement(&StaticText{1, 0, "Registers:"})
 	dl.AddElement(&StaticText{30, 0, "Memory:"})
 	dl.AddElement(&StaticText{24, 0, "TOS:"})
+	dl.AddElement(&StaticText{1, 6, "Disassembly:"})
 
 	cmdInput.GiveFocus()
 

@@ -38,8 +38,40 @@ var InstructionData = []InstructionInfo{
 	{0xa9, "LDA", LDA, 2, 2, AddrMode_Immediate},
 	{0xa5, "LDA", LDA, 2, 3, AddrMode_AbsoluteZeroPage},
 	{0xb5, "LDA", LDA, 2, 4, AddrMode_ZeroPageIdxX},
+	{0xa1, "LDA", LDA, 2, 6, AddrMode_PostIndexIndirect},
+	{0xb1, "LDA", LDA, 2, 5, AddrMode_PreIndexIndirect},
 	{0xad, "LDA", LDA, 3, 4, AddrMode_Absolute},
+	{0xbd, "LDA", LDA, 3, 4, AddrMode_AbsoluteIndexedX},
+	{0xb9, "LDA", LDA, 3, 4, AddrMode_AbsoluteIndexedY},
+
+	{0xa2, "LDX", LDX, 2, 2, AddrMode_Immediate},
+	{0xa6, "LDX", LDX, 2, 3, AddrMode_AbsoluteZeroPage},
+	{0xb6, "LDX", LDX, 2, 4, AddrMode_ZeroPageIdxY},
+	{0xae, "LDX", LDX, 3, 4, AddrMode_Absolute},
+	{0xbe, "LDX", LDX, 3, 4, AddrMode_AbsoluteIndexedY},
+
+	{0xa0, "LDY", LDY, 2, 2, AddrMode_Immediate},
+	{0xa4, "LDY", LDY, 2, 3, AddrMode_AbsoluteZeroPage},
+	{0xb4, "LDY", LDY, 2, 4, AddrMode_ZeroPageIdxX},
+	{0xac, "LDY", LDY, 3, 4, AddrMode_Absolute},
+	{0xbc, "LDY", LDY, 3, 4, AddrMode_AbsoluteIndexedX},
+
 	{0x85, "STA", STA, 2, 3, AddrMode_AbsoluteZeroPage},
+	{0x95, "STA", STA, 2, 4, AddrMode_ZeroPageIdxX},
+	{0x81, "STA", STA, 2, 6, AddrMode_PostIndexIndirect},
+	{0x91, "STA", STA, 2, 6, AddrMode_PreIndexIndirect},
+	{0x8d, "STA", STA, 3, 4, AddrMode_Absolute},
+	{0x9d, "STA", STA, 3, 5, AddrMode_AbsoluteIndexedX},
+	{0x99, "STA", STA, 3, 5, AddrMode_AbsoluteIndexedY},
+
+	{0x86, "STX", STX, 2, 3, AddrMode_AbsoluteZeroPage},
+	{0x96, "STX", STX, 2, 4, AddrMode_ZeroPageIdxY},
+	{0x8e, "STX", STX, 3, 4, AddrMode_Absolute},
+
+	{0x84, "STY", STY, 2, 3, AddrMode_AbsoluteZeroPage},
+	{0x94, "STY", STY, 2, 4, AddrMode_ZeroPageIdxX},
+	{0x8c, "STY", STY, 3, 4, AddrMode_Absolute},
+
 	{0x18, "CLC", CLC, 1, 2, AddrMode_Implicit},
 	{0x38, "SEC", SEC, 1, 2, AddrMode_Implicit},
 	{0xaa, "TAX", TAX, 1, 2, AddrMode_Implicit},
@@ -76,13 +108,55 @@ func LDA(info *InstructionInfo) InstructionExecFunc {
 	}
 }
 
+func LDX(info *InstructionInfo) InstructionExecFunc {
+	readFunc := GetReadFunc(info.mode)
+
+	return func(ctx CPUContext) int {
+		val, exclock := readFunc(ctx)
+		ctx.SetRegY(setFlagsFromValue(ctx, val))
+		ctx.SetRegPC(ctx.RegPC() + info.length)
+		return info.tstates + exclock
+	}
+}
+
+func LDY(info *InstructionInfo) InstructionExecFunc {
+	readFunc := GetReadFunc(info.mode)
+
+	return func(ctx CPUContext) int {
+		val, exclock := readFunc(ctx)
+		ctx.SetRegY(setFlagsFromValue(ctx, val))
+		ctx.SetRegPC(ctx.RegPC() + info.length)
+		return info.tstates + exclock
+	}
+}
+
 func STA(info *InstructionInfo) InstructionExecFunc {
 	writeFunc := GetWriteFunc(info.mode)
 
 	return func(ctx CPUContext) int {
-		exclock := writeFunc(ctx, ctx.RegA())
+		writeFunc(ctx, ctx.RegA())
 		ctx.SetRegPC(ctx.RegPC() + info.length)
-		return info.tstates + exclock
+		return info.tstates
+	}
+}
+
+func STX(info *InstructionInfo) InstructionExecFunc {
+	writeFunc := GetWriteFunc(info.mode)
+
+	return func(ctx CPUContext) int {
+		writeFunc(ctx, ctx.RegX())
+		ctx.SetRegPC(ctx.RegPC() + info.length)
+		return info.tstates
+	}
+}
+
+func STY(info *InstructionInfo) InstructionExecFunc {
+	writeFunc := GetWriteFunc(info.mode)
+
+	return func(ctx CPUContext) int {
+		writeFunc(ctx, ctx.RegY())
+		ctx.SetRegPC(ctx.RegPC() + info.length)
+		return info.tstates
 	}
 }
 
