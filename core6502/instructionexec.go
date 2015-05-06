@@ -72,6 +72,23 @@ var InstructionData = []InstructionInfo{
 	{0x94, "STY", STY, 2, 4, AddrMode_ZeroPageIdxX},
 	{0x8c, "STY", STY, 3, 4, AddrMode_Absolute},
 
+	// todo tstates
+	{0xe6, "INC", INC, 2, 4, AddrMode_AbsoluteZeroPage},
+	{0xf6, "INC", INC, 2, 4, AddrMode_ZeroPageIdxX},
+	{0xee, "INC", INC, 3, 4, AddrMode_Absolute},
+	{0xfe, "INC", INC, 3, 4, AddrMode_AbsoluteIndexedX},
+
+	{0xe8, "INX", INX, 1, 4, AddrMode_Implicit},
+	{0xc8, "INY", INY, 1, 4, AddrMode_Implicit},
+
+	{0xc6, "DEC", DEC, 2, 4, AddrMode_AbsoluteZeroPage},
+	{0xd6, "DEC", DEC, 2, 4, AddrMode_ZeroPageIdxX},
+	{0xce, "DEC", DEC, 3, 4, AddrMode_Absolute},
+	{0xde, "DEC", DEC, 3, 4, AddrMode_AbsoluteIndexedX},
+
+	{0xca, "DEX", DEX, 1, 4, AddrMode_Implicit},
+	{0x88, "DEY", DEY, 1, 4, AddrMode_Implicit},
+
 	{0x18, "CLC", CLC, 1, 2, AddrMode_Implicit},
 	{0x38, "SEC", SEC, 1, 2, AddrMode_Implicit},
 	{0xaa, "TAX", TAX, 1, 2, AddrMode_Implicit},
@@ -95,6 +112,66 @@ func setFlagsFromValue(ctx CPUContext, val uint8) uint8 {
 	ctx.SetFlag(Flag_Z, val == 0)
 	ctx.SetFlag(Flag_N, (val&0x80) == 0x80)
 	return val
+}
+
+func INC(info *InstructionInfo) InstructionExecFunc {
+	readFunc := GetReadFunc(info.mode)
+	writeFunc := GetWriteFunc(info.mode)
+
+	return func(ctx CPUContext) int {
+		val, exclock := readFunc(ctx)
+		writeFunc(ctx, setFlagsFromValue(ctx, val+1))
+		ctx.SetRegPC(ctx.RegPC() + info.length)
+		return info.tstates + exclock
+	}
+}
+
+func INX(info *InstructionInfo) InstructionExecFunc {
+
+	return func(ctx CPUContext) int {
+		ctx.SetRegX(setFlagsFromValue(ctx, ctx.RegX()+1))
+		ctx.SetRegPC(ctx.RegPC() + info.length)
+		return info.tstates
+	}
+}
+
+func INY(info *InstructionInfo) InstructionExecFunc {
+
+	return func(ctx CPUContext) int {
+		ctx.SetRegY(setFlagsFromValue(ctx, ctx.RegY()+1))
+		ctx.SetRegPC(ctx.RegPC() + info.length)
+		return info.tstates
+	}
+}
+
+func DEC(info *InstructionInfo) InstructionExecFunc {
+	readFunc := GetReadFunc(info.mode)
+	writeFunc := GetWriteFunc(info.mode)
+
+	return func(ctx CPUContext) int {
+		val, exclock := readFunc(ctx)
+		writeFunc(ctx, setFlagsFromValue(ctx, val-1))
+		ctx.SetRegPC(ctx.RegPC() + info.length)
+		return info.tstates + exclock
+	}
+}
+
+func DEX(info *InstructionInfo) InstructionExecFunc {
+
+	return func(ctx CPUContext) int {
+		ctx.SetRegX(setFlagsFromValue(ctx, ctx.RegX()-1))
+		ctx.SetRegPC(ctx.RegPC() + info.length)
+		return info.tstates
+	}
+}
+
+func DEY(info *InstructionInfo) InstructionExecFunc {
+
+	return func(ctx CPUContext) int {
+		ctx.SetRegY(setFlagsFromValue(ctx, ctx.RegY()-1))
+		ctx.SetRegPC(ctx.RegPC() + info.length)
+		return info.tstates
+	}
 }
 
 func LDA(info *InstructionInfo) InstructionExecFunc {
