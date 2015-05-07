@@ -171,3 +171,12 @@ func WriteAboluteIndexedY(ctx CPUContext, val uint8) int {
 	ctx.Poke(addr, val)
 	return 0
 }
+
+func signExtend(val uint8) uint16 {
+	return uint16(int16(int8(val)))
+}
+
+func CalcPCRelativeAddr(ctx CPUContext) uint16 {
+	offset := signExtend(ctx.Peek(ctx.RegPC() + 1))
+	return ctx.RegPC() + offset
+}
