@@ -58,7 +58,7 @@ func LogicalShiftRight8(a uint8, carry bool) (uint8, bool) {
 	return res, carry
 }
 
-// carry >> val >> carry
+// msb(val) >> val >> carry
 func ArithmeticShiftRight8(a uint8) (uint8, bool) {
 	res := int8(a) >> 1
 
