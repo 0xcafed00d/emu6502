@@ -30,6 +30,7 @@ func SubWithCarry8(a, b uint8, carry bool) (uint8, bool) {
 	return uint8(res), carry
 }
 
+// carry << val << carry
 func LogicalShiftLeft8(a uint8, carry bool) (uint8, bool) {
 	res := uint16(a) << 1
 	if carry {
@@ -43,13 +44,26 @@ func LogicalShiftLeft8(a uint8, carry bool) (uint8, bool) {
 	return uint8(res), carry
 }
 
+// carry >> val >> carry
 func LogicalShiftRight8(a uint8, carry bool) (uint8, bool) {
-	res := uint16(a) << 1
+	res := a >> 1
 	if carry {
-		res |= 1
+		res |= 0x80
 	}
 
-	if res > 0xff {
+	if a&1 != 0 {
+		carry = true
+	}
+
+	return res, carry
+}
+
+// carry >> val >> carry
+func ArithmeticShiftRight8(a uint8) (uint8, bool) {
+	res := int8(a) >> 1
+
+	carry := false
+	if a&1 != 0 {
 		carry = true
 	}
 
