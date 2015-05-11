@@ -39,6 +39,7 @@ func LogicalShiftLeft8(a uint8, carry bool) (uint8, bool) {
 		res |= 1
 	}
 
+	carry = false
 	if res > 0xff {
 		carry = true
 	}
@@ -53,6 +54,7 @@ func LogicalShiftRight8(a uint8, carry bool) (uint8, bool) {
 		res |= 0x80
 	}
 
+	carry = false
 	if a&1 != 0 {
 		carry = true
 	}

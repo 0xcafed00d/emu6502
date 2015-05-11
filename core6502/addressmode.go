@@ -3,19 +3,19 @@ package core6502
 type AddressMode int
 
 const (
-	AddrMode_Invalid           AddressMode = iota
-	AddrMode_Implicit          AddressMode = iota
-	AddrMode_Immediate         AddressMode = iota
-	AddrMode_AbsoluteZeroPage  AddressMode = iota
-	AddrMode_Absolute          AddressMode = iota
-	AddrMode_ZeroPageIdxX      AddressMode = iota
-	AddrMode_ZeroPageIdxY      AddressMode = iota
-	AddrMode_PreIndexIndirect  AddressMode = iota
-	AddrMode_PostIndexIndirect AddressMode = iota
-	AddrMode_AbsoluteIndexedX  AddressMode = iota
-	AddrMode_AbsoluteIndexedY  AddressMode = iota
-	AddrMode_Indirect          AddressMode = iota
-	AddrMode_Relative          AddressMode = iota
+	AddrMode_Invalid AddressMode = iota
+	AddrMode_Implicit
+	AddrMode_Immediate
+	AddrMode_AbsoluteZeroPage
+	AddrMode_Absolute
+	AddrMode_ZeroPageIdxX
+	AddrMode_ZeroPageIdxY
+	AddrMode_PreIndexIndirect
+	AddrMode_PostIndexIndirect
+	AddrMode_AbsoluteIndexedX
+	AddrMode_AbsoluteIndexedY
+	AddrMode_Indirect
+	AddrMode_Relative
 )
 
 type AddrModeReadFunc func(ctx CPUContext) (uint8, int)

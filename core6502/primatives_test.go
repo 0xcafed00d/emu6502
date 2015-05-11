@@ -34,9 +34,9 @@ func testBinaryFunction(t *testing.T, data []bintestdata, binFunc BinaryFunction
 	}
 }
 
-func testUnaryFunction(t *testing.T, data []bintestdata, unaryFunc UnaryFunction) {
+func testUnaryFunction(t *testing.T, data []unarytestdata, unaryFunc UnaryFunction) {
 	for i, tst := range data {
-		val, carry := unaryFunc(tst.dataVal1, tst.dataCarry)
+		val, carry := unaryFunc(tst.dataVal, tst.dataCarry)
 		if val != tst.expectedVal || carry != tst.expectedCarry {
 			t.Fatalf("Failed: [%d] Expected: [%v,%v] Got: [%v,%v]",
 				i, tst.expectedVal, tst.expectedCarry, val, carry)
@@ -63,4 +63,26 @@ func TestSubWithCarry(t *testing.T) {
 		{0x10, 0x10, false, 0x00, false},
 	}
 	testBinaryFunction(t, test, SubWithCarry8)
+}
+
+func TestLSL(t *testing.T) {
+	var test = []unarytestdata{
+		{B_01000111, false, B_10001110, false},
+		{B_01000111, true, B_10001111, false},
+		{B_11000111, false, B_10001110, true},
+		{B_11000111, true, B_10001111, true},
+	}
+
+	testUnaryFunction(t, test, LogicalShiftLeft8)
+}
+
+func TestLSR(t *testing.T) {
+	var test = []unarytestdata{
+		{B_10001110, false, B_01000111, false},
+		{B_10001110, true, B_11000111, false},
+		{B_11000111, false, B_01100011, true},
+		{B_11000111, true, B_11100011, true},
+	}
+
+	testUnaryFunction(t, test, LogicalShiftRight8)
 }
