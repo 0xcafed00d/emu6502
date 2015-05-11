@@ -5,11 +5,12 @@ func SignExtend8To16(val uint8) uint16 {
 }
 
 func AddWithCarry8(a, b uint8, carry bool) (uint8, bool) {
-	res := SignExtend8To16(a) + SignExtend8To16(b)
+	res := uint16(a) + uint16(b)
 	if carry {
 		res++
 	}
 
+	carry = false
 	if res > 0xff {
 		carry = true
 	}
@@ -18,11 +19,12 @@ func AddWithCarry8(a, b uint8, carry bool) (uint8, bool) {
 }
 
 func SubWithCarry8(a, b uint8, carry bool) (uint8, bool) {
-	res := SignExtend8To16(a) - SignExtend8To16(b)
+	res := uint16(a) - uint16(b)
 	if carry {
 		res--
 	}
 
+	carry = false
 	if res > 0xff {
 		carry = true
 	}
