@@ -5,6 +5,7 @@ import (
 	"container/list"
 	"github.com/nsf/termbox-go"
 	"github.com/simulatedsimian/go_sandbox/geom"
+	"github.com/simulatedsimian/runes"
 	"reflect"
 	"unicode"
 )
@@ -121,7 +122,7 @@ func MakeTextInputField(x, y int, inpHandler InputHandler) *TextInputField {
 
 func (t *TextInputField) HandleInput(k termbox.Key, r rune) {
 	if k == termbox.KeyEnter {
-		t.inp = TrimRunes(t.inp, unicode.IsSpace)
+		t.inp = runes.Trim(t.inp, unicode.IsSpace)
 		if len(t.inp) > 0 {
 			if t.histPos != nil && reflect.DeepEqual(t.histPos.Value, t.inp) {
 				t.history.MoveToBack(t.histPos)
@@ -163,7 +164,7 @@ func (t *TextInputField) HandleInput(k termbox.Key, r rune) {
 					t.histPos = t.history.Front()
 				}
 			}
-			t.inp = CloneRuneSlice(t.histPos.Value.([]rune))
+			t.inp = runes.CloneSlice(t.histPos.Value.([]rune))
 			t.cursorLoc = len(t.inp)
 		}
 	}
@@ -183,22 +184,22 @@ func (t *TextInputField) HandleInput(k termbox.Key, r rune) {
 	}
 
 	if r > ' ' {
-		t.inp = InsertRuneAt(t.inp, r, t.cursorLoc)
+		t.inp = runes.InsertAt(t.inp, r, t.cursorLoc)
 		t.cursorLoc++
 	}
 
 	if k == 32 {
-		t.inp = InsertRuneAt(t.inp, ' ', t.cursorLoc)
+		t.inp = runes.InsertAt(t.inp, ' ', t.cursorLoc)
 		t.cursorLoc++
 	}
 
 	if t.cursorLoc > 0 && len(t.inp) > 0 && (k == termbox.KeyBackspace || k == termbox.KeyBackspace2) {
-		t.inp = DeleteRuneAt(t.inp, t.cursorLoc-1)
+		t.inp = runes.DeleteAt(t.inp, t.cursorLoc-1)
 		t.cursorLoc--
 	}
 
 	if k == termbox.KeyDelete && t.cursorLoc < len(t.inp) {
-		t.inp = DeleteRuneAt(t.inp, t.cursorLoc)
+		t.inp = runes.DeleteAt(t.inp, t.cursorLoc)
 	}
 
 	if k == termbox.KeyHome {
