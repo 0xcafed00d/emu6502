@@ -5,9 +5,8 @@ import (
 )
 
 type disasmInfo struct {
-	name   string
-	length uint16
-	mode   AddressMode
+	name string
+	mode AddressMode
 }
 
 var disasmData [256]disasmInfo
@@ -15,7 +14,7 @@ var disasmData [256]disasmInfo
 func init() {
 	for n := 0; n < len(InstructionData); n++ {
 		info := &InstructionData[n]
-		disasmData[info.opcode] = disasmInfo{info.name, info.length, info.mode}
+		disasmData[info.opcode] = disasmInfo{info.name, info.mode}
 	}
 }
 
@@ -55,5 +54,5 @@ func Disassemble(ctx CPUContext, addr uint16) (string, uint16) {
 	if info.mode == AddrMode_Invalid {
 		return fmt.Sprintf("db  $%02x", ctx.Peek(addr)), 1
 	}
-	return info.name + " " + addressModeToStr(info.mode, ctx, addr+1), info.length
+	return info.name + " " + addressModeToStr(info.mode, ctx, addr+1), InstructionBytes(info.mode)
 }

@@ -21,6 +21,37 @@ const (
 type AddrModeReadFunc func(ctx CPUContext) (uint8, int)
 type AddrModeWriteFunc func(ctx CPUContext, val uint8) int
 
+func InstructionBytes(mode AddressMode) uint16 {
+	switch mode {
+	case AddrMode_Implicit:
+		return 1
+	case AddrMode_Immediate:
+		return 2
+	case AddrMode_AbsoluteZeroPage:
+		return 2
+	case AddrMode_Absolute:
+		return 3
+	case AddrMode_ZeroPageIdxX:
+		return 2
+	case AddrMode_ZeroPageIdxY:
+		return 2
+	case AddrMode_PreIndexIndirect:
+		return 2
+	case AddrMode_PostIndexIndirect:
+		return 2
+	case AddrMode_AbsoluteIndexedX:
+		return 3
+	case AddrMode_AbsoluteIndexedY:
+		return 3
+	case AddrMode_Indirect:
+		return 3
+	case AddrMode_Relative:
+		return 2
+	}
+
+	return 0
+}
+
 func GetReadFunc(mode AddressMode) AddrModeReadFunc {
 	switch mode {
 	case AddrMode_Implicit:
