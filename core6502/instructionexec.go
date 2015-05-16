@@ -88,14 +88,22 @@ var InstructionData = []InstructionInfo{
 	{0xca, "DEX", DEX, 4, AddrMode_Implicit},
 	{0x88, "DEY", DEY, 4, AddrMode_Implicit},
 
-	{0x18, "CLC", CLC, 2, AddrMode_Implicit},
-	{0x38, "SEC", SEC, 2, AddrMode_Implicit},
 	{0xaa, "TAX", TAX, 2, AddrMode_Implicit},
 	{0xa8, "TAY", TAY, 2, AddrMode_Implicit},
 	{0xba, "TSX", TSX, 2, AddrMode_Implicit},
 	{0x8a, "TXA", TXA, 2, AddrMode_Implicit},
 	{0x9a, "TXS", TXS, 2, AddrMode_Implicit},
 	{0x98, "TYA", TYA, 2, AddrMode_Implicit},
+
+	{0x18, "CLC", CLC, 2, AddrMode_Implicit},
+	{0x38, "SEC", SEC, 2, AddrMode_Implicit},
+	{0xD8, "CLD", CLD, 2, AddrMode_Implicit},
+	{0xF8, "SED", SED, 2, AddrMode_Implicit},
+	{0x58, "CLI", CLI, 2, AddrMode_Implicit},
+	{0x78, "SEI", SEI, 2, AddrMode_Implicit},
+	{0xB8, "CLV", CLV, 2, AddrMode_Implicit},
+
+	{0xea, "NOP", NOP, 1, AddrMode_Implicit},
 }
 
 var executors [256]InstructionExecFunc
@@ -268,6 +276,56 @@ func SEC(info *InstructionInfo) InstructionExecFunc {
 	}
 }
 
+func CLD(info *InstructionInfo) InstructionExecFunc {
+	length := InstructionBytes(info.mode)
+
+	return func(ctx CPUContext) int {
+		ctx.SetFlag(Flag_D, false)
+		ctx.SetRegPC(ctx.RegPC() + length)
+		return info.tstates
+	}
+}
+
+func SED(info *InstructionInfo) InstructionExecFunc {
+	length := InstructionBytes(info.mode)
+
+	return func(ctx CPUContext) int {
+		ctx.SetFlag(Flag_D, true)
+		ctx.SetRegPC(ctx.RegPC() + length)
+		return info.tstates
+	}
+}
+
+func CLI(info *InstructionInfo) InstructionExecFunc {
+	length := InstructionBytes(info.mode)
+
+	return func(ctx CPUContext) int {
+		ctx.SetFlag(Flag_I, false)
+		ctx.SetRegPC(ctx.RegPC() + length)
+		return info.tstates
+	}
+}
+
+func SEI(info *InstructionInfo) InstructionExecFunc {
+	length := InstructionBytes(info.mode)
+
+	return func(ctx CPUContext) int {
+		ctx.SetFlag(Flag_I, true)
+		ctx.SetRegPC(ctx.RegPC() + length)
+		return info.tstates
+	}
+}
+
+func CLV(info *InstructionInfo) InstructionExecFunc {
+	length := InstructionBytes(info.mode)
+
+	return func(ctx CPUContext) int {
+		ctx.SetFlag(Flag_V, false)
+		ctx.SetRegPC(ctx.RegPC() + length)
+		return info.tstates
+	}
+}
+
 func TAX(info *InstructionInfo) InstructionExecFunc {
 	length := InstructionBytes(info.mode)
 
@@ -323,6 +381,15 @@ func TYA(info *InstructionInfo) InstructionExecFunc {
 
 	return func(ctx CPUContext) int {
 		ctx.SetRegA(setFlagsFromValue(ctx, ctx.RegY()))
+		ctx.SetRegPC(ctx.RegPC() + length)
+		return info.tstates
+	}
+}
+
+func NOP(info *InstructionInfo) InstructionExecFunc {
+	length := InstructionBytes(info.mode)
+
+	return func(ctx CPUContext) int {
 		ctx.SetRegPC(ctx.RegPC() + length)
 		return info.tstates
 	}
