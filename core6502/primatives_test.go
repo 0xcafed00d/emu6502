@@ -45,10 +45,6 @@ func testUnaryFunction(t *testing.T, data []unarytestdata, unaryFunc UnaryFuncti
 	}
 }
 
-func TestNamexxx(t *testing.T) {
-	t.Fatal("FUNCtION: " + testbuddy.GetShortFuncName(LDA))
-}
-
 func TestAddWithCarry(t *testing.T) {
 	var test = []bintestdata{
 		{0x10, 0x10, false, 0x20, false},
