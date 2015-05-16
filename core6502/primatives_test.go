@@ -1,6 +1,7 @@
 package core6502
 
 import (
+	"github.com/simulatedsimian/testbuddy"
 	"testing"
 )
 
@@ -42,6 +43,10 @@ func testUnaryFunction(t *testing.T, data []unarytestdata, unaryFunc UnaryFuncti
 				i, tst.expectedVal, tst.expectedCarry, val, carry)
 		}
 	}
+}
+
+func TestNamexxx(t *testing.T) {
+	t.Fatal("FUNCtION: " + testbuddy.GetShortFuncName(LDA))
 }
 
 func TestAddWithCarry(t *testing.T) {
