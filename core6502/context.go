@@ -1,6 +1,13 @@
 package core6502
 
-type CPUContext interface {
+type CPUMemory interface {
+	Peek(addr uint16) uint8
+	Poke(addr uint16, val uint8)
+	PeekWord(addr uint16) uint16
+	PokeWord(addr uint16, val uint16)
+}
+
+type CPURegisters interface {
 	Flag(mask uint8) bool
 	Flags() uint8
 	RegA() uint8
@@ -15,10 +22,11 @@ type CPUContext interface {
 	SetRegY(val uint8)
 	SetRegSP(val uint8)
 	SetRegPC(val uint16)
-	Peek(addr uint16) uint8
-	Poke(addr uint16, val uint8)
-	PeekWord(addr uint16) uint16
-	PokeWord(addr uint16, val uint16)
+}
+
+type CPUContext interface {
+	CPUMemory
+	CPURegisters
 }
 
 // performs hard reset, resets all ram & registers
