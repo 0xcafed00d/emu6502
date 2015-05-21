@@ -51,6 +51,30 @@ func SoftResetCPU(ctx CPUContext) {
 	ctx.SetRegPC(ctx.PeekWord(Vector_RST))
 }
 
+func Push8(ctx CPUContext, val uint8) {
+	sp := ctx.RegSP()
+	ctx.Poke(0x100+uint16(sp), val)
+	ctx.SetRegSP(sp - 1)
+}
+
+func Push16(ctx CPUContext, val uint16) {
+	Push8(ctx, uint8(val>>8))
+	Push8(ctx, uint8(val))
+}
+
+func Pop8(ctx CPUContext) uint8 {
+	sp := ctx.RegSP() + 1
+	val := ctx.Peek(0x100 + uint16(sp))
+	ctx.SetRegSP(sp)
+	return val
+}
+
+func Pop16(ctx CPUContext) uint16 {
+	var val uint16 = uint16(Pop8(ctx))
+	val |= uint16(Pop8(ctx) << 8)
+	return val
+}
+
 // CPU context. Conains CPU registers and 64K Ram
 type BasicCPUContext struct {
 	reg struct {
