@@ -51,6 +51,18 @@ func SoftResetCPU(ctx CPUContext) {
 	ctx.SetRegPC(ctx.PeekWord(Vector_RST))
 }
 
+func HiByte(val uint16) uint8 {
+	return uint8(val >> 8)
+}
+
+func LoByte(val uint16) uint8 {
+	return uint8(val)
+}
+
+func MakeWord(hi, lo uint8) uint16 {
+	return (uint16(hi) << 8) | uint16(lo)
+}
+
 func Push8(ctx CPUContext, val uint8) {
 	sp := ctx.RegSP()
 	ctx.Poke(0x100+uint16(sp), val)

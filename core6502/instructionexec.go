@@ -90,6 +90,7 @@ var InstructionData = []InstructionInfo{
 	{0x78, SEI, 2, AddrMode_Implicit},
 	{0xB8, CLV, 2, AddrMode_Implicit},
 	{0xea, NOP, 1, AddrMode_Implicit},
+	{0x00, BRK, 7, AddrMode_Implicit},
 }
 
 var executors [256]InstructionExecFunc
@@ -377,6 +378,18 @@ func NOP(info *InstructionInfo) InstructionExecFunc {
 
 	return func(ctx CPUContext) int {
 		ctx.SetRegPC(ctx.RegPC() + length)
+		return info.tstates
+	}
+}
+
+func BRK(info *InstructionInfo) InstructionExecFunc {
+
+	return func(ctx CPUContext) int {
+		vec := ctx.PeekWord(Vector_IRQ)
+		Push16(ctx, ctx.RegPC()+1)
+		ctx.SetRegPC(vec)
+		ctx.SetFlag(Flag_I, true)
+		ctx.SetFlag(Flag_B, true)
 		return info.tstates
 	}
 }
