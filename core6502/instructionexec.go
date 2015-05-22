@@ -91,6 +91,19 @@ var InstructionData = []InstructionInfo{
 	{0xB8, CLV, 2, AddrMode_Implicit},
 	{0xea, NOP, 1, AddrMode_Implicit},
 	{0x00, BRK, 7, AddrMode_Implicit},
+	{0x48, PHA, 3, AddrMode_Implicit},
+	{0x68, PLA, 4, AddrMode_Implicit},
+	{0x08, PHP, 3, AddrMode_Implicit},
+	{0x28, PLP, 4, AddrMode_Implicit},
+
+	{0x10, BPL, 2, AddrMode_Relative},
+	{0x30, BMI, 2, AddrMode_Relative},
+	{0x50, BVC, 2, AddrMode_Relative},
+	{0x70, BVS, 2, AddrMode_Relative},
+	{0x90, BCC, 2, AddrMode_Relative},
+	{0xB0, BCS, 2, AddrMode_Relative},
+	{0xD0, BNE, 2, AddrMode_Relative},
+	{0xF0, BEQ, 2, AddrMode_Relative},
 }
 
 var executors [256]InstructionExecFunc
@@ -385,13 +398,172 @@ func NOP(info *InstructionInfo) InstructionExecFunc {
 func BRK(info *InstructionInfo) InstructionExecFunc {
 
 	return func(ctx CPUContext) int {
-		vec := ctx.PeekWord(Vector_IRQ)
 		Push16(ctx, ctx.RegPC()+1)
 		ctx.SetFlag(Flag_B, true)
 		Push8(ctx, ctx.Flags())
-
-		ctx.SetRegPC(vec)
 		ctx.SetFlag(Flag_I, true)
+		ctx.SetRegPC(ctx.PeekWord(Vector_IRQ))
 		return info.tstates
+	}
+}
+
+func PHA(info *InstructionInfo) InstructionExecFunc {
+	length := InstructionBytes(info.mode)
+
+	return func(ctx CPUContext) int {
+		Push8(ctx, ctx.RegA())
+		ctx.SetRegPC(ctx.RegPC() + length)
+		return info.tstates
+	}
+}
+
+func PLA(info *InstructionInfo) InstructionExecFunc {
+	length := InstructionBytes(info.mode)
+
+	return func(ctx CPUContext) int {
+		ctx.SetRegA(setFlagsFromValue(ctx, Pop8(ctx)))
+		ctx.SetRegPC(ctx.RegPC() + length)
+		return info.tstates
+	}
+}
+
+func PHP(info *InstructionInfo) InstructionExecFunc {
+	length := InstructionBytes(info.mode)
+
+	return func(ctx CPUContext) int {
+		Push8(ctx, ctx.Flags())
+		ctx.SetRegPC(ctx.RegPC() + length)
+		return info.tstates
+	}
+}
+
+func PLP(info *InstructionInfo) InstructionExecFunc {
+	length := InstructionBytes(info.mode)
+
+	return func(ctx CPUContext) int {
+		ctx.SetFlags(Pop8(ctx))
+		ctx.SetFlag(Flag_B, false)
+		ctx.SetRegPC(ctx.RegPC() + length)
+		return info.tstates
+	}
+}
+
+func BPL(info *InstructionInfo) InstructionExecFunc {
+	length := InstructionBytes(info.mode)
+
+	return func(ctx CPUContext) int {
+		if !ctx.Flag(Flag_N) {
+			newPC, exclock := CalcPCRelativeAddr(ctx)
+			ctx.SetRegPC(newPC)
+			return info.tstates + exclock
+		} else {
+			ctx.SetRegPC(ctx.RegPC() + length)
+			return info.tstates
+		}
+	}
+}
+
+func BMI(info *InstructionInfo) InstructionExecFunc {
+	length := InstructionBytes(info.mode)
+
+	return func(ctx CPUContext) int {
+		if ctx.Flag(Flag_N) {
+			newPC, exclock := CalcPCRelativeAddr(ctx)
+			ctx.SetRegPC(newPC)
+			return info.tstates + exclock
+		} else {
+			ctx.SetRegPC(ctx.RegPC() + length)
+			return info.tstates
+		}
+	}
+}
+
+func BVC(info *InstructionInfo) InstructionExecFunc {
+	length := InstructionBytes(info.mode)
+
+	return func(ctx CPUContext) int {
+		if !ctx.Flag(Flag_V) {
+			newPC, exclock := CalcPCRelativeAddr(ctx)
+			ctx.SetRegPC(newPC)
+			return info.tstates + exclock
+		} else {
+			ctx.SetRegPC(ctx.RegPC() + length)
+			return info.tstates
+		}
+	}
+}
+
+func BVS(info *InstructionInfo) InstructionExecFunc {
+	length := InstructionBytes(info.mode)
+
+	return func(ctx CPUContext) int {
+		if ctx.Flag(Flag_V) {
+			newPC, exclock := CalcPCRelativeAddr(ctx)
+			ctx.SetRegPC(newPC)
+			return info.tstates + exclock
+		} else {
+			ctx.SetRegPC(ctx.RegPC() + length)
+			return info.tstates
+		}
+	}
+}
+
+func BCC(info *InstructionInfo) InstructionExecFunc {
+	length := InstructionBytes(info.mode)
+
+	return func(ctx CPUContext) int {
+		if !ctx.Flag(Flag_C) {
+			newPC, exclock := CalcPCRelativeAddr(ctx)
+			ctx.SetRegPC(newPC)
+			return info.tstates + exclock
+		} else {
+			ctx.SetRegPC(ctx.RegPC() + length)
+			return info.tstates
+		}
+	}
+}
+
+func BCS(info *InstructionInfo) InstructionExecFunc {
+	length := InstructionBytes(info.mode)
+
+	return func(ctx CPUContext) int {
+		if ctx.Flag(Flag_C) {
+			newPC, exclock := CalcPCRelativeAddr(ctx)
+			ctx.SetRegPC(newPC)
+			return info.tstates + exclock
+		} else {
+			ctx.SetRegPC(ctx.RegPC() + length)
+			return info.tstates
+		}
+	}
+}
+
+func BNE(info *InstructionInfo) InstructionExecFunc {
+	length := InstructionBytes(info.mode)
+
+	return func(ctx CPUContext) int {
+		if !ctx.Flag(Flag_Z) {
+			newPC, exclock := CalcPCRelativeAddr(ctx)
+			ctx.SetRegPC(newPC)
+			return info.tstates + exclock
+		} else {
+			ctx.SetRegPC(ctx.RegPC() + length)
+			return info.tstates
+		}
+	}
+}
+
+func BEQ(info *InstructionInfo) InstructionExecFunc {
+	length := InstructionBytes(info.mode)
+
+	return func(ctx CPUContext) int {
+		if ctx.Flag(Flag_Z) {
+			newPC, exclock := CalcPCRelativeAddr(ctx)
+			ctx.SetRegPC(newPC)
+			return info.tstates + exclock
+		} else {
+			ctx.SetRegPC(ctx.RegPC() + length)
+			return info.tstates
+		}
 	}
 }

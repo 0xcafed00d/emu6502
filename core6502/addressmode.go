@@ -207,7 +207,12 @@ func signExtend(val uint8) uint16 {
 	return uint16(int16(int8(val)))
 }
 
-func CalcPCRelativeAddr(ctx CPUContext) uint16 {
-	offset := signExtend(ctx.Peek(ctx.RegPC() + 1))
-	return ctx.RegPC() + offset
+func CalcPCRelativeAddr(ctx CPUContext) (uint16, int) {
+	oldPC := ctx.RegPC()
+	newPC := signExtend(ctx.Peek(oldPC+1)) + oldPC
+	exclock := 1
+	if HiByte(newPC) != HiByte(oldPC) {
+		exclock++
+	}
+	return newPC, exclock
 }
