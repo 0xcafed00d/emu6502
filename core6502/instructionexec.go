@@ -387,9 +387,11 @@ func BRK(info *InstructionInfo) InstructionExecFunc {
 	return func(ctx CPUContext) int {
 		vec := ctx.PeekWord(Vector_IRQ)
 		Push16(ctx, ctx.RegPC()+1)
+		ctx.SetFlag(Flag_B, true)
+		Push8(ctx, ctx.Flags())
+
 		ctx.SetRegPC(vec)
 		ctx.SetFlag(Flag_I, true)
-		ctx.SetFlag(Flag_B, true)
 		return info.tstates
 	}
 }
