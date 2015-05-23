@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/simulatedsimian/emu6502/core6502"
 	"reflect"
-	"strconv"
 	"strings"
 )
 
@@ -35,7 +34,7 @@ func processArgs(cmd commandInfo, ctx core6502.CPUContext, parts []string) ([]re
 		switch cmd.handler.Type().In(n).Kind() {
 
 		case reflect.Uint8:
-			i, err := strconv.ParseUint(parts[0], 16, 8)
+			i, err := core6502.ParseInt(parts[0], 8)
 			if err != nil {
 				return nil, err
 			}
@@ -43,7 +42,7 @@ func processArgs(cmd commandInfo, ctx core6502.CPUContext, parts []string) ([]re
 			parts = parts[1:]
 
 		case reflect.Uint16:
-			i, err := strconv.ParseUint(parts[0], 16, 16)
+			i, err := core6502.ParseInt(parts[0], 16)
 			if err != nil {
 				return nil, err
 			}

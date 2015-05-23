@@ -448,11 +448,11 @@ func PLP(info *InstructionInfo) InstructionExecFunc {
 	}
 }
 
-func BPL(info *InstructionInfo) InstructionExecFunc {
+func makeBranchExecFunc(info *InstructionInfo, testFunc func(CPUContext) bool) InstructionExecFunc {
 	length := InstructionBytes(info.mode)
 
 	return func(ctx CPUContext) int {
-		if !ctx.Flag(Flag_N) {
+		if testFunc(ctx) {
 			newPC, exclock := CalcPCRelativeAddr(ctx)
 			ctx.SetRegPC(newPC)
 			return info.tstates + exclock
@@ -461,109 +461,52 @@ func BPL(info *InstructionInfo) InstructionExecFunc {
 			return info.tstates
 		}
 	}
+}
+
+func BPL(info *InstructionInfo) InstructionExecFunc {
+	return makeBranchExecFunc(info, func(ctx CPUContext) bool {
+		return !ctx.Flag(Flag_N)
+	})
 }
 
 func BMI(info *InstructionInfo) InstructionExecFunc {
-	length := InstructionBytes(info.mode)
-
-	return func(ctx CPUContext) int {
-		if ctx.Flag(Flag_N) {
-			newPC, exclock := CalcPCRelativeAddr(ctx)
-			ctx.SetRegPC(newPC)
-			return info.tstates + exclock
-		} else {
-			ctx.SetRegPC(ctx.RegPC() + length)
-			return info.tstates
-		}
-	}
+	return makeBranchExecFunc(info, func(ctx CPUContext) bool {
+		return ctx.Flag(Flag_N)
+	})
 }
 
 func BVC(info *InstructionInfo) InstructionExecFunc {
-	length := InstructionBytes(info.mode)
-
-	return func(ctx CPUContext) int {
-		if !ctx.Flag(Flag_V) {
-			newPC, exclock := CalcPCRelativeAddr(ctx)
-			ctx.SetRegPC(newPC)
-			return info.tstates + exclock
-		} else {
-			ctx.SetRegPC(ctx.RegPC() + length)
-			return info.tstates
-		}
-	}
+	return makeBranchExecFunc(info, func(ctx CPUContext) bool {
+		return !ctx.Flag(Flag_V)
+	})
 }
 
 func BVS(info *InstructionInfo) InstructionExecFunc {
-	length := InstructionBytes(info.mode)
-
-	return func(ctx CPUContext) int {
-		if ctx.Flag(Flag_V) {
-			newPC, exclock := CalcPCRelativeAddr(ctx)
-			ctx.SetRegPC(newPC)
-			return info.tstates + exclock
-		} else {
-			ctx.SetRegPC(ctx.RegPC() + length)
-			return info.tstates
-		}
-	}
+	return makeBranchExecFunc(info, func(ctx CPUContext) bool {
+		return ctx.Flag(Flag_V)
+	})
 }
 
 func BCC(info *InstructionInfo) InstructionExecFunc {
-	length := InstructionBytes(info.mode)
-
-	return func(ctx CPUContext) int {
-		if !ctx.Flag(Flag_C) {
-			newPC, exclock := CalcPCRelativeAddr(ctx)
-			ctx.SetRegPC(newPC)
-			return info.tstates + exclock
-		} else {
-			ctx.SetRegPC(ctx.RegPC() + length)
-			return info.tstates
-		}
-	}
+	return makeBranchExecFunc(info, func(ctx CPUContext) bool {
+		return !ctx.Flag(Flag_C)
+	})
 }
 
 func BCS(info *InstructionInfo) InstructionExecFunc {
-	length := InstructionBytes(info.mode)
-
-	return func(ctx CPUContext) int {
-		if ctx.Flag(Flag_C) {
-			newPC, exclock := CalcPCRelativeAddr(ctx)
-			ctx.SetRegPC(newPC)
-			return info.tstates + exclock
-		} else {
-			ctx.SetRegPC(ctx.RegPC() + length)
-			return info.tstates
-		}
-	}
+	return makeBranchExecFunc(info, func(ctx CPUContext) bool {
+		return ctx.Flag(Flag_C)
+	})
 }
 
 func BNE(info *InstructionInfo) InstructionExecFunc {
-	length := InstructionBytes(info.mode)
-
-	return func(ctx CPUContext) int {
-		if !ctx.Flag(Flag_Z) {
-			newPC, exclock := CalcPCRelativeAddr(ctx)
-			ctx.SetRegPC(newPC)
-			return info.tstates + exclock
-		} else {
-			ctx.SetRegPC(ctx.RegPC() + length)
-			return info.tstates
-		}
-	}
+	return makeBranchExecFunc(info, func(ctx CPUContext) bool {
+		return !ctx.Flag(Flag_Z)
+	})
 }
 
 func BEQ(info *InstructionInfo) InstructionExecFunc {
-	length := InstructionBytes(info.mode)
-
-	return func(ctx CPUContext) int {
-		if ctx.Flag(Flag_Z) {
-			newPC, exclock := CalcPCRelativeAddr(ctx)
-			ctx.SetRegPC(newPC)
-			return info.tstates + exclock
-		} else {
-			ctx.SetRegPC(ctx.RegPC() + length)
-			return info.tstates
-		}
-	}
+	return makeBranchExecFunc(info, func(ctx CPUContext) bool {
+		return ctx.Flag(Flag_Z)
+	})
 }

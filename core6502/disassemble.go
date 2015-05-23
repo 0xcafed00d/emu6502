@@ -44,7 +44,7 @@ func addressModeToStr(mode AddressMode, ctx CPUContext, addr uint16) string {
 	case AddrMode_Indirect:
 		return fmt.Sprintf("($%04x)", ctx.PeekWord(addr))
 	case AddrMode_Relative:
-		return fmt.Sprintf("%d", int(ctx.Peek(addr)))
+		return fmt.Sprintf("%v", int8(ctx.Peek(addr)))
 	}
 	return "Invalid"
 }
