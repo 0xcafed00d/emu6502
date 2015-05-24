@@ -219,7 +219,7 @@ func (t *TextInputField) Draw() {
 }
 
 func (t *TextInputField) GiveFocus() bool {
-	termbox.SetCursor(t.x, t.y)
+	termbox.SetCursor(t.x+t.cursorLoc, t.y)
 	return true
 }
 

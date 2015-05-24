@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/simulatedsimian/emu6502/core6502"
 	"reflect"
-	"strings"
 )
 
 type commandInfo struct {
@@ -67,7 +66,7 @@ func DispatchCommand(ctx core6502.CPUContext, cmd string) (bool, error) {
 		return true, nil
 	}
 
-	parts := strings.Split(cmd, " ")
+	parts := core6502.Split(cmd, " \t")
 	if len(parts) > 0 && parts[0] != "" {
 		if cmd, ok := commands[parts[0]]; ok {
 			if args, err := processArgs(cmd, ctx, parts[1:]); err == nil {
