@@ -1,7 +1,7 @@
 package core6502
 
 import (
-	"github.com/simulatedsimian/testbuddy"
+	//	"github.com/simulatedsimian/testbuddy"
 	"testing"
 )
 

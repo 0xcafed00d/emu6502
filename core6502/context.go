@@ -83,7 +83,7 @@ func Pop8(ctx CPUContext) uint8 {
 
 func Pop16(ctx CPUContext) uint16 {
 	var val uint16 = uint16(Pop8(ctx))
-	val |= uint16(Pop8(ctx) << 8)
+	val |= uint16(Pop8(ctx)) << 8
 	return val
 }
 
