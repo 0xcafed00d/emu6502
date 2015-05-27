@@ -28,24 +28,6 @@ func Split(s, charset string) []string {
 	return res
 }
 
-func ParseInt(s string, bitSize int) (int64, error) {
-	s = strings.Trim(s, " \t")
-
-	if len(s) == 0 {
-		return 0, errors.New("Empty input")
-	}
-
-	if s[0] == '$' {
-		// hex value
-		i, err := strconv.ParseInt(s[1:], 16, bitSize)
-		return i, err
-	} else {
-		// decimal value
-		i, err := strconv.ParseInt(s, 10, bitSize)
-		return i, err
-	}
-}
-
 func ParseUint(s string, bitSize int) (uint64, error) {
 	s = strings.Trim(s, " \t")
 
@@ -53,13 +35,17 @@ func ParseUint(s string, bitSize int) (uint64, error) {
 		return 0, errors.New("Empty input")
 	}
 
-	if s[0] == '$' {
-		// hex value
-		i, err := strconv.ParseUint(s[1:], 16, bitSize)
-		return i, err
-	} else {
-		// decimal value
-		i, err := strconv.ParseUint(s, 10, bitSize)
-		return i, err
+	var ui uint64
+	var err error
+
+	switch s[0] {
+	case '$':
+		ui, err = strconv.ParseUint(s[1:], 16, bitSize)
+	case '-':
+		i, err := strconv.ParseInt(s, 10, bitSize)
+		return uint64(i), err
+	default:
+		ui, err = strconv.ParseUint(s, 10, bitSize)
 	}
+	return ui, err
 }
