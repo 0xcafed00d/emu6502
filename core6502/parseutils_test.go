@@ -7,23 +7,18 @@ import (
 
 type T testing.T
 
-func (t *T) AssertEqualsNoErr(val interface{}, err error) func(val interface{}) {
-	return func(val interface{}) {
+func TestSplit(tst *testing.T) {
+	t := (*testbuddy.T)(tst)
 
-	}
+	t.Assert(Split("", " \t")).Equal([]string{})
+	t.Assert(Split("   \t\t\t", " \t")).Equal([]string{})
+	t.Assert(Split("hello world", " \t")).Equal([]string{"hello", "world"})
+	t.Assert(Split("    hello     world     ", " \t")).Equal([]string{"hello", "world"})
 }
 
-func (t *T) AssertErr(val interface{}, err error) {
-	testbuddy.AssertEqual((*testing.T)(t), val, nil)
-}
+func TestParseUint(tst *testing.T) {
+	t := (*testbuddy.T)(tst)
 
-func TestSplit(t *testing.T) {
-	tt := (*T)(t)
-
-	testbuddy.AssertEqual(t, Split("", " \t"), []string{})
-	testbuddy.AssertEqual(t, Split("   \t\t\t", " \t"), []string{})
-	testbuddy.AssertEqual(t, Split("hello world", " \t"), []string{"hello", "world"})
-	testbuddy.AssertEqual(t, Split("    hello     world     ", " \t"), []string{"hello", "world"})
-
-	tt.AssertEqualsNoErr(ParseUint("123", 16))(1)
+	t.AssertNoErr(ParseUint("1234", 16)).Equal(uint64(1234))
+	t.AssertErr(ParseUint("1234", 8)).Equal(uint64(0xffffffffffffffff))
 }
