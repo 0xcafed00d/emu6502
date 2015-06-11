@@ -104,6 +104,7 @@ var InstructionData = []InstructionInfo{
 	{0xB0, BCS, 2, AddrMode_Relative},
 	{0xD0, BNE, 2, AddrMode_Relative},
 	{0xF0, BEQ, 2, AddrMode_Relative},
+	{0x20, JSR, 6, AddrMode_Absolute},
 }
 
 var executors [256]InstructionExecFunc
@@ -509,4 +510,14 @@ func BEQ(info *InstructionInfo) InstructionExecFunc {
 	return makeBranchExecFunc(info, func(ctx CPUContext) bool {
 		return ctx.Flag(Flag_Z)
 	})
+}
+
+func JSR(info *InstructionInfo) InstructionExecFunc {
+
+	return func(ctx CPUContext) int {
+		addr := ctx.PeekWord(ctx.RegPC() + 1)
+		Push16(ctx, ctx.RegPC()-1)
+		ctx.SetRegPC(addr)
+		return info.tstates
+	}
 }
