@@ -106,6 +106,8 @@ var InstructionData = []InstructionInfo{
 	{0xF0, BEQ, 2, AddrMode_Relative},
 	{0x20, JSR, 6, AddrMode_Absolute},
 	{0x60, RTS, 6, AddrMode_Implicit},
+	{0x4C, JMP, 3, AddrMode_Absolute},
+	{0x6C, JMP, 5, AddrMode_Indirect},
 }
 
 var executors [256]InstructionExecFunc
@@ -516,9 +518,21 @@ func BEQ(info *InstructionInfo) InstructionExecFunc {
 func JSR(info *InstructionInfo) InstructionExecFunc {
 
 	return func(ctx CPUContext) int {
-		addr := ctx.PeekWord(ctx.RegPC() + 1)
+		addr := ReadAbsolute16(ctx)
 		Push16(ctx, ctx.RegPC()+2)
 		ctx.SetRegPC(addr)
+		return info.tstates
+	}
+}
+
+func JMP(info *InstructionInfo) InstructionExecFunc {
+	readFunc := ReadAbsolute16
+	if info.mode == AddrMode_Indirect {
+		readFunc = ReadIndirect16
+	}
+
+	return func(ctx CPUContext) int {
+		ctx.SetRegPC(readFunc(ctx))
 		return info.tstates
 	}
 }

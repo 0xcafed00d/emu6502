@@ -203,6 +203,16 @@ func WriteAboluteIndexedY(ctx CPUContext, val uint8) int {
 	return 0
 }
 
+// $ffff
+func ReadAbsolute16(ctx CPUContext) uint16 {
+	return ctx.PeekWord(ctx.RegPC() + 1)
+}
+
+// ($ffff)
+func ReadIndirect16(ctx CPUContext) uint16 {
+	return ctx.PeekWord(ctx.PeekWord(ctx.RegPC() + 1))
+}
+
 func signExtend(val uint8) uint16 {
 	return uint16(int16(int8(val)))
 }
