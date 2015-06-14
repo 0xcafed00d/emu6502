@@ -104,10 +104,38 @@ var InstructionData = []InstructionInfo{
 	{0xB0, BCS, 2, AddrMode_Relative},
 	{0xD0, BNE, 2, AddrMode_Relative},
 	{0xF0, BEQ, 2, AddrMode_Relative},
+
 	{0x20, JSR, 6, AddrMode_Absolute},
 	{0x60, RTS, 6, AddrMode_Implicit},
 	{0x4C, JMP, 3, AddrMode_Absolute},
 	{0x6C, JMP, 5, AddrMode_Indirect},
+
+	{0x09, ORA, 5, AddrMode_Immediate},
+	{0x05, ORA, 5, AddrMode_AbsoluteZeroPage},
+	{0x15, ORA, 5, AddrMode_ZeroPageIdxX},
+	{0x01, ORA, 5, AddrMode_PostIndexIndirect},
+	{0x11, ORA, 5, AddrMode_PreIndexIndirect},
+	{0x0D, ORA, 5, AddrMode_Absolute},
+	{0x1D, ORA, 5, AddrMode_AbsoluteIndexedX},
+	{0x19, ORA, 5, AddrMode_AbsoluteIndexedY},
+
+	{0x29, AND, 5, AddrMode_Immediate},
+	{0x25, AND, 5, AddrMode_AbsoluteZeroPage},
+	{0x35, AND, 5, AddrMode_ZeroPageIdxX},
+	{0x21, AND, 5, AddrMode_PostIndexIndirect},
+	{0x31, AND, 5, AddrMode_PreIndexIndirect},
+	{0x2D, AND, 5, AddrMode_Absolute},
+	{0x3D, AND, 5, AddrMode_AbsoluteIndexedX},
+	{0x39, AND, 5, AddrMode_AbsoluteIndexedY},
+
+	{0x49, EOR, 5, AddrMode_Immediate},
+	{0x45, EOR, 5, AddrMode_AbsoluteZeroPage},
+	{0x55, EOR, 5, AddrMode_ZeroPageIdxX},
+	{0x41, EOR, 5, AddrMode_PostIndexIndirect},
+	{0x51, EOR, 5, AddrMode_PreIndexIndirect},
+	{0x4D, EOR, 5, AddrMode_Absolute},
+	{0x5D, EOR, 5, AddrMode_AbsoluteIndexedX},
+	{0x59, EOR, 5, AddrMode_AbsoluteIndexedY},
 }
 
 var executors [256]InstructionExecFunc
@@ -543,5 +571,41 @@ func RTS(info *InstructionInfo) InstructionExecFunc {
 		addr := Pop16(ctx) + 1
 		ctx.SetRegPC(addr)
 		return info.tstates
+	}
+}
+
+func ORA(info *InstructionInfo) InstructionExecFunc {
+	readFunc := GetReadFunc(info.mode)
+	length := InstructionBytes(info.mode)
+
+	return func(ctx CPUContext) int {
+		val, exclock := readFunc(ctx)
+		ctx.SetRegA(setFlagsFromValue(ctx, ctx.RegA()|val))
+		ctx.SetRegPC(ctx.RegPC() + length)
+		return info.tstates + exclock
+	}
+}
+
+func AND(info *InstructionInfo) InstructionExecFunc {
+	readFunc := GetReadFunc(info.mode)
+	length := InstructionBytes(info.mode)
+
+	return func(ctx CPUContext) int {
+		val, exclock := readFunc(ctx)
+		ctx.SetRegA(setFlagsFromValue(ctx, ctx.RegA()&val))
+		ctx.SetRegPC(ctx.RegPC() + length)
+		return info.tstates + exclock
+	}
+}
+
+func EOR(info *InstructionInfo) InstructionExecFunc {
+	readFunc := GetReadFunc(info.mode)
+	length := InstructionBytes(info.mode)
+
+	return func(ctx CPUContext) int {
+		val, exclock := readFunc(ctx)
+		ctx.SetRegA(setFlagsFromValue(ctx, ctx.RegA()^val))
+		ctx.SetRegPC(ctx.RegPC() + length)
+		return info.tstates + exclock
 	}
 }
