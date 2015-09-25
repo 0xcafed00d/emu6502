@@ -2,7 +2,7 @@ package core6502
 
 import (
 	"fmt"
-	"github.com/simulatedsimian/testbuddy"
+	"github.com/simulatedsimian/assert"
 )
 
 type disasmInfo struct {
@@ -15,7 +15,7 @@ var disasmData [256]disasmInfo
 func init() {
 	for n := 0; n < len(InstructionData); n++ {
 		info := &InstructionData[n]
-		disasmData[info.opcode] = disasmInfo{testbuddy.GetShortFuncName(info.execMaker), info.mode}
+		disasmData[info.opcode] = disasmInfo{assert.GetShortFuncName(info.execMaker), info.mode}
 	}
 }
 

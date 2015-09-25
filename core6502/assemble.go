@@ -2,7 +2,7 @@ package core6502
 
 import (
 	//	"fmt"
-	"github.com/simulatedsimian/testbuddy"
+	"github.com/simulatedsimian/assert"
 )
 
 type asmInfo map[AddressMode]uint8
@@ -12,7 +12,7 @@ var asmData map[string]asmInfo
 func initx() {
 	for n := 0; n < len(InstructionData); n++ {
 		info := &InstructionData[n]
-		name := testbuddy.GetShortFuncName(info.execMaker)
+		name := assert.GetShortFuncName(info.execMaker)
 
 		if _, ok := asmData[name]; !ok {
 			asmData[name] = asmInfo{}
