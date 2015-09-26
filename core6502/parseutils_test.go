@@ -13,6 +13,10 @@ func TestSplit(t *testing.T) {
 }
 
 func TestParseUint(t *testing.T) {
-//	t.AssertNoErr(ParseUint("1234", 16)).Equal(uint64(1234))
-//	t.AssertErr(ParseUint("1234", 8)).Equal(uint64(0xffffffffffffffff))
+	pack := assert.Pack
+
+	assert.Equal(t, pack(ParseUint("1234", 16))[0], uint64(1234))
+
+	assert.NoError(t, pack(ParseUint("1234", 16)))
+	assert.HasError(t, pack(ParseUint("1234", 8)))
 }
