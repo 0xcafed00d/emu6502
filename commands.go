@@ -19,6 +19,7 @@ var commands = map[string]commandInfo{
 	"x":         {"Exec Instruction: x", reflect.ValueOf(execInstr)},
 	"softreset": {"", reflect.ValueOf(core6502.SoftResetCPU)},
 	"hardreset": {"", reflect.ValueOf(core6502.HardResetCPU)},
+	"asm":       {"Assemble:     asm: <address> <instruction>", reflect.ValueOf(asm)},
 }
 
 func processArgs(cmd commandInfo, ctx core6502.CPUContext, parts []string) ([]reflect.Value, error) {
@@ -124,4 +125,10 @@ func setReg(ctx core6502.CPUContext, reg string, val uint8) error {
 		return fmt.Errorf("Invalid Register: %s", reg)
 	}
 	return nil
+}
+
+func asm(ctx core6502.CPUContext, addr uint16, instr string) error {
+	newAddr, err := core6502.Assemble(ctx, addr, instr)
+	newAddr = newAddr
+	return err
 }

@@ -1,7 +1,7 @@
 package core6502
 
 import (
-	//	"fmt"
+	"fmt"
 	"github.com/simulatedsimian/assert"
 )
 
@@ -9,7 +9,7 @@ type asmInfo map[AddressMode]uint8
 
 var asmData map[string]asmInfo
 
-func initx() {
+func init() {
 	for n := 0; n < len(InstructionData); n++ {
 		info := &InstructionData[n]
 		name := assert.GetShortFuncName(info.execMaker)
@@ -21,6 +21,22 @@ func initx() {
 	}
 }
 
-func Assemble(ctx CPUContext, addr uint16, s string) (uint16, error) {
-	return 0, nil
+func DetermineAddresMode(parts []string) AddressMode {
+	return AddrMode_Absolute
+}
+
+func Assemble(ctx CPUContext, addr uint16, s string) (nextAddr uint16, err error) {
+	parts := Split(s, " ,")
+	addrMode := DetermineAddresMode(parts)
+
+	info, ok := asmData[parts[0]]
+	if !ok {
+		err = fmt.Errorf("'%s' not valid instruction", parts[0])
+		return
+	}
+
+	addrMode = addrMode
+	info = info
+
+	return
 }
