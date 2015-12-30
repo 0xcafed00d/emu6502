@@ -7,7 +7,7 @@ import (
 
 type asmInfo map[AddressMode]uint8
 
-var asmData map[string]asmInfo
+var asmData map[string]asmInfo = make(map[string]asmInfo)
 
 func init() {
 	for n := 0; n < len(InstructionData); n++ {
