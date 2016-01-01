@@ -49,11 +49,12 @@ func addressModeToStr(mode AddressMode, ctx CPUContext, addr uint16) string {
 	return "Invalid"
 }
 
-func Disassemble(ctx CPUContext, addr uint16) (string, uint16) {
+func Disassemble(ctx CPUContext, addr uint16) (string, uint16, bool) {
 	info := &disasmData[ctx.Peek(addr)]
 
 	if info.mode == AddrMode_Invalid {
-		return fmt.Sprintf("db  $%02x", ctx.Peek(addr)), 1
+		return fmt.Sprintf("db  $%02x", ctx.Peek(addr)), 1, false
 	}
-	return info.name + " " + addressModeToStr(info.mode, ctx, addr+1), InstructionBytes(info.mode)
+	return info.name + " " + addressModeToStr(info.mode, ctx, addr+1),
+		InstructionBytes(info.mode), true
 }

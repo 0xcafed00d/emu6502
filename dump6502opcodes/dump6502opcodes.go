@@ -13,13 +13,15 @@ func main() {
 	for opcode := 0; opcode < 256; opcode++ {
 		ctx.Poke(0x400, uint8(opcode))
 
-		dis, len := core6502.Disassemble(&ctx, 0x400)
-		if len == 1 {
-			fmt.Printf("$%02x:              %s\n", opcode, dis)
-		} else if len == 2 {
-			fmt.Printf("$%02x $%02x:          %s\n", opcode, ctx.Peek(0x401), dis)
-		} else if len == 3 {
-			fmt.Printf("$%02x $%02x $%02x:      %s\n", opcode, ctx.Peek(0x401), ctx.Peek(0x402), dis)
+		dis, len, ok := core6502.Disassemble(&ctx, 0x400)
+		if ok {
+			if len == 1 {
+				fmt.Printf("$%02x:              %s\n", opcode, dis)
+			} else if len == 2 {
+				fmt.Printf("$%02x $%02x:          %s\n", opcode, ctx.Peek(0x401), dis)
+			} else if len == 3 {
+				fmt.Printf("$%02x $%02x $%02x:      %s\n", opcode, ctx.Peek(0x401), ctx.Peek(0x402), dis)
+			}
 		}
 	}
 }

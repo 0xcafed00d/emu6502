@@ -109,7 +109,7 @@ func (dd *DisasmDisplay) Draw() {
 	pc := dd.ctx.RegPC()
 
 	for l := 0; l < dd.lines; l++ {
-		instr, len := core6502.Disassemble(dd.ctx, pc)
+		instr, len, _ := core6502.Disassemble(dd.ctx, pc)
 		printAtDef(dd.x, dd.y+l, fmt.Sprintf("$%04x %s", pc, instr))
 		pc += len
 	}
